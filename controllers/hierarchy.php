@@ -8,11 +8,30 @@ class Hierarchy extends CI_Controller {
 		
 		// Load models
 		$this->load->model('hierarchy_model');
+		
+		// Load helpers
+		$this->load->helper('hierarchy');
 	}
 
 	function index()
 	{
-		$list = $this->hierarchy_model->get_hierarchical_list('menu');
+		// Do nothing...
+	}
+	
+	function manage($table = NULL, $sort = NULL)
+	{
+		// Make sure we have a table
+		if ( ! $table )
+		{
+			redirect('hierarchy');
+		}
+		
+		// TO-DO
+		$list_item = '<a href="{link}">{title}</a> count: {count}';
+		$paginate; // for comments...
+		
+		// Generate list
+		$list = $this->hierarchy_model->get_hierarchical_list($table, $sort);
 		
 		$data['menu'] = $list;
 		
@@ -25,11 +44,9 @@ class Hierarchy extends CI_Controller {
 			'parent_id' 	=> 11,
 			'title' 		=> 'Used'
 		);
-		
-		//$this->hierarchy_model->add_item($data, 'menu');
 	}
 	
 }
 
 /* End of file welcome.php */
-/* Location: ./application/controllers/welcome.php */
+/* Location: ./application/controllers/hierarchy.php */

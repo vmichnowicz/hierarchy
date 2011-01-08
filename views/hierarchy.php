@@ -1,31 +1,22 @@
-<?php
-
-function ul($data)
-{
-	$out = '<ul>';
-	
-	foreach ($data as $item)
-	{
-		$out .= '<li id="item_' . $item['id'] . '">' . $item['title'];
-
-		if ( isset($item['children']) )
-		{
-			$out .= ul($item['children']);
+<!DOCTYPE html> 
+<html>
+<head>
+	<title>CI Hierarchy</title>
+	<style type="text/css">
+		body {
+			font: 13px Verdana, sans-serif;
+			color: #333;
 		}
-		
-		$out .= '</li>';
-	}
-	
-	$out .= '</ul>';
-	
-	return $out;
-}
+	</style>
+</head>
+<body>
 
-echo ul($menu);
+<h1>My Menu</h1>
+<?php echo hierarchical_ul($menu); ?>
 
-echo '<pre>';
-print_r($menu);
-echo '</pre>';
+<pre>
+<?php print_r($menu); ?>
+</pre>
 
-?>
-
+</body>
+</html>

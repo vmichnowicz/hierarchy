@@ -15,20 +15,29 @@ class Hierarchy_model extends CI_Model {
 	 * 
 	 * @return array
 	 */
-	public function get_list($table = NULL)
+	public function get_list($table = NULL, $sort = NULL)
 	{
 		if ($table)
 		{
+			// Get sort order
+			if ( ! $sort )
+			{
+				$sort = 'lineage';
+			}
+			
 			// Run query
 			$query = $this->db->query("
 				SELECT *,
 					(
 						SELECT COUNT(*)
-						FROM menu
-						WHERE menu.lineage LIKE ( CONCAT(h.lineage,'%') ) AND menu.lineage != h.lineage
+						FROM hierarchy
+						WHERE h.lineage LIKE (CONCAT(h.lineage,'%')) AND h.lineage != h.lineage
 					) AS num_children
-				FROM $table as h
-				ORDER BY h.lineage
+				FROM
+					hierarchy as h,
+					$table as j
+				WHERE h.hierarchy_id = j.hierarchy_id
+				ORDER BY h.$sort
 			");
 			
 			// If we got some results
@@ -36,8 +45,8 @@ class Hierarchy_model extends CI_Model {
 			{
 				foreach ($query->result() as $row)
 				{
-					$this->items[$row->id] = array(
-						'id' 			=> $row->id,
+					$this->items[] = array(
+						'id' 			=> $row->hierarchy_id,
 						'title' 		=> $row->title,
 						'deep' 			=> $row->deep,
 						'lineage' 		=> $row->lineage ? explode('-', $row->lineage) : NULL,
@@ -75,13 +84,13 @@ class Hierarchy_model extends CI_Model {
 	 * 
 	 * @return array
 	 */
-	public function get_hierarchical_list($table)
+	public function get_hierarchical_list($table, $sort = NULL)
 	{
 		// If user has NOT  already generated a list of items
 		if ( ! $this->items)
 		{
 			// Get list of all items
-			$this->get_list($table);
+			$this->get_list($table, $sort);
 			
 			// If we don't have any items to display
 			if ($this->items == NULL)
@@ -100,15 +109,16 @@ class Hierarchy_model extends CI_Model {
 			$eval = '$heirarchy';
 				
 			foreach ($item['lineage'] as $lineage)
-			{				
+			{
+				// If this is NOT the first or last element
 				if (count($item['lineage']) > 1  AND $count != count($item['lineage']) - 1)
 				{
-					
 					$eval .= '[' . $lineage . ']' . '["children"]';
 				}
+				// If this IS the first and/or last element
 				else
 				{
-					$eval .= '[' . $lineage . ']';
+					$eval .= '[' . $lineage . ']' . '["root"]';
 				}
 				$count++;
 			}
@@ -125,10 +135,10 @@ class Hierarchy_model extends CI_Model {
 		
 		function sortify($a, $b)
 		{
-			echo $a['title'] . $b['title'];
+			// Do some sorting...
 		}
 		
-		usort($heirarchy, 'sortify');
+		// usort($heirarchy, 'sortify');
 		
 		// Return heirarchial list of all elements
 		return $heirarchy;
