@@ -14,5 +14,7 @@
 <h1>My Menu</h1>
 <?php echo $menu; ?>
 
+<h1>My Comments</h1>
+
 </body>
 </html>

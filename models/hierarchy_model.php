@@ -62,7 +62,7 @@ class Hierarchy_model extends CI_Model {
 					);
 					
 					// Add in extra data
-					foreach ($this->config->item('hierarchy_menu') as $extra_row)
+					foreach ($this->config->item('hierarchy_' . $table) as $extra_row)
 					{
 						$this->items[$counter][$extra_row] = $row->$extra_row;
 					}
@@ -206,15 +206,24 @@ class Hierarchy_model extends CI_Model {
 		// Insert Item
 		$this->db->insert('hierarchy', array('parent_id' => $data['parent_id']));
 		
+		// Insert new hierarchy
 		$insert_id = $this->db->insert_id();
 		
 		// Update extra data...
+		foreach ($this->config->item('hierarchy_' . $table) as $extra_row)
+		{
+			$extra_data[$extra_row] = $data[$extra_row];
+		}
+		
+		// Add hierarchy ID to extra data array
+		$extra_data['hierarchy_id'] = $insert_id;
+		
+		// Add item in database
+		$this->db->insert($table, $extra_data);
 		
 		// If a parent ID was provided
 		if ($data['parent_id'])
 		{
-			
-			
 			$item['lineage'][] = $insert_id;
 			
 			$update_data = array(

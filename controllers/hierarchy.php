@@ -44,8 +44,8 @@ class Hierarchy extends CI_Controller {
 		
 		$data = array(
 			'parent_id' 	=> NULL,
-			'title' 		=> 'New2',
-			'url' 			=> 'asfd/asdf/used'
+			'title' 		=> 'New69',
+			'url' 			=> 'asfd/asdf/69'
 		);
 		
 		$this->hierarchy_model->add_item($table, $data);
