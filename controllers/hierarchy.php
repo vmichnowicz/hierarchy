@@ -43,8 +43,8 @@ class Hierarchy extends CI_Controller {
 	{
 		
 		$data = array(
-			'parent_id' 	=> NULL,
-			'title' 		=> 'New69',
+			'parent_id' 	=> 33,
+			'title' 		=> 'o yeah!',
 			'url' 			=> 'asfd/asdf/69'
 		);
 		

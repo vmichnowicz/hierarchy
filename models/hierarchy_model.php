@@ -17,6 +17,7 @@ class Hierarchy_model extends CI_Model {
 	 * @access public
 	 * 
 	 * @param string		Name of table
+	 * @param string		Name of row to sort on
 	 * 
 	 * @return array
 	 */
@@ -97,6 +98,7 @@ class Hierarchy_model extends CI_Model {
 	 * @access public
 	 * 
 	 * @param string		Name of table
+	 * @param string		Name of row to sort on
 	 * 
 	 * @return array
 	 */
@@ -146,20 +148,22 @@ class Hierarchy_model extends CI_Model {
 			// There has to be a better way to do this...
 			eval($eval);
 		}
-		
-		// Sort it out
-		
-		function sortify($a, $b)
-		{
-			// Do some sorting...
-		}
-		
-		// usort($heirarchy, 'sortify');
-		
+
 		// Return heirarchial list of all elements
 		return $heirarchy;
 	}
 	
+	/**
+	 * See if a hierarchy item exists
+	 *
+	 * @author Victor Michnowicz
+	 * 
+	 * @access public
+	 * 
+	 * @param int			Item ID
+	 * 
+	 * @return mixed
+	 */
 	public function item_exists($id)
 	{
 		$query = $this->db
@@ -186,6 +190,18 @@ class Hierarchy_model extends CI_Model {
 		}
 	}
 	
+	/**
+	 * Add a hierarchy item
+	 *
+	 * @author Victor Michnowicz
+	 * 
+	 * @access public
+	 *
+	 * @param string			Extra table name
+	 * @param array				Extra data
+	 * 
+	 * @return null
+	 */
 	public function add_item($table, $data)
 	{
 		// Make sure the parent_id is set
@@ -197,7 +213,7 @@ class Hierarchy_model extends CI_Model {
 		// Make sure this item exists in the given table
 		$item = $this->item_exists($data['parent_id']);
 		
-		// If this item does not exist (expect when parent_id is set to NULL)
+		// If this item does not exist (except when parent_id is set to NULL)
 		if ( ! $item AND $data['parent_id'] != NULL)
 		{
 			return FALSE;
@@ -242,6 +258,7 @@ class Hierarchy_model extends CI_Model {
 			
 			$this->db->insert($table, $data);
 		}
+		
 		// If no parent ID was provided
 		else
 		{
@@ -256,6 +273,18 @@ class Hierarchy_model extends CI_Model {
 		}
 	}
 	
+	/**
+	 * Delete a hierarchy item
+	 *
+	 * @author Victor Michnowicz
+	 * 
+	 * @access public
+	 *
+	 * @param int				Item ID
+	 * @param bool				Shall we delete all of this items children?
+	 * 
+	 * @return bool
+	 */
 	public function delete_item($hierarchy_id, $delete_children = FALSE)
 	{
 		$query = $this->db
@@ -283,12 +312,12 @@ class Hierarchy_model extends CI_Model {
 			{
 				foreach ($query->result() as $row)
 				{
-					// if we DO want to delte the children
+					// If we DO want to delte the children
 					if ( $delete_children )
 					{
 						$this->db->where('hierarchy_id', $row->hierarchy_id)->delete('hierarchy');
 					}
-					// if we DO NOT want to delte the children (shift left)
+					// If we DO NOT want to delte the children (shift left)
 					else
 					{
 						$lineage_array = explode('-', $row->lineage);
@@ -333,7 +362,11 @@ class Hierarchy_model extends CI_Model {
 			
 			// Delete item (we have to do this last because of foreign key constraints)
 			$this->db->where('hierarchy_id', $hierarchy_id)->delete('hierarchy');
+			
+			return TRUE;
 		}
+		
+		// If this element does not have any children
 		else
 		{
 			return FALSE;
