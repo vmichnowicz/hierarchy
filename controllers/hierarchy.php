@@ -26,26 +26,35 @@ class Hierarchy extends CI_Controller {
 			redirect('hierarchy');
 		}
 		
-		// TO-DO
-		$list_item = '<a href="{link}">{title}</a> count: {count}';
-		$paginate; // for comments...
+		// TO-DO - paginate (for comments perhaps...)
 		
 		// Generate list
 		$list = $this->hierarchy_model->get_hierarchical_list($table, $sort);
 		
-		$data['menu'] = $list;
+		// Menu template
+		$template = '<a href="{url}">{title}</a> id:{hierarchy_id}';
+		
+		$data['menu'] = hierarchical_ul($list, $template);
 		
 		$this->load->view('hierarchy', $data);
 	}
 	
-	function add()
+	function add($table)
 	{
+		
 		$data = array(
-			'parent_id' 	=> 11,
-			'title' 		=> 'Used'
+			'parent_id' 	=> NULL,
+			'title' 		=> 'New2',
+			'url' 			=> 'asfd/asdf/used'
 		);
+		
+		$this->hierarchy_model->add_item($table, $data);
 	}
 	
+	function delete($hierarchy_id, $delete_children = FALSE)
+	{
+		$this->hierarchy_model->delete_item($hierarchy_id, $delete_children);
+	}
 }
 
 /* End of file welcome.php */

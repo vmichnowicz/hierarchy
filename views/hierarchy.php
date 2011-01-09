@@ -12,11 +12,7 @@
 <body>
 
 <h1>My Menu</h1>
-<?php echo hierarchical_ul($menu); ?>
-
-<pre>
-<?php print_r($menu); ?>
-</pre>
+<?php echo $menu; ?>
 
 </body>
 </html>
