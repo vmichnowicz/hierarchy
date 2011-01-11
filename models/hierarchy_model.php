@@ -299,7 +299,6 @@ class Hierarchy_model extends CI_Model {
 			
 			$parent_id = $row->parent_id;
 			$lineage = $row->lineage;
-
 			
 			$query = $this->db
 				->where('lineage LIKE', $lineage . '%')
@@ -371,6 +370,79 @@ class Hierarchy_model extends CI_Model {
 		{
 			return FALSE;
 		}
+	}
+	
+	/**
+	 * Shift a hierarchy item left
+	 *
+	 * @author Victor Michnowicz
+	 * 
+	 * @access public
+	 *
+	 * @param int				Item ID
+	 * 
+	 * @return bool
+	 */
+	public function shift_left($hierarchy_id)
+	{
+		// Get item info
+		$item = $this->item_exists($id);
+		
+		// Make sure this is not a root element
+		if ( ! $item['parent_id'] )
+		{
+			return FALSE;
+		}
+		
+		// Get all items that share this lineage
+		$query = $this->db
+			->where('lineage LIKE', $item['lineage'] . '%')
+			->where('lineage !=', $lineage)
+			->order_by('hierarchy_id', 'DESC') // Foreign key constraints strike again
+			->get('hierarchy');
+			
+		// Loop through each result (we are guaranteed at least one result, however)
+		foreach ($query->result() as $row)
+		{
+			$lineage_array = explode('-', $row->lineage);
+						
+			foreach ($lineage_array as $key=>$value)
+			{
+				if ($value == $hierarchy_id)
+				{
+					unset($lineage_array[$key]);
+					
+					// We can stop here, this ID will only be found once
+					break;
+				}
+			}
+			
+			$new_lineage = implode('-', $lineage_array);
+			
+			if (count($lineage_array) > 1)
+			{
+				end($lineage_array);
+				$new_parent = prev($lineage_array);
+				$new_deep = $row->deep - 1;
+			}
+			else
+			{
+				$new_parent = NULL;
+				$new_deep = 0;
+			}
+			
+			$new_data = array(
+				'parent_id' => $new_parent,
+				'lineage' => $new_lineage,
+				'deep' => $new_deep
+			);
+			
+			$this->db
+				->where('hierarchy_id', $row->hierarchy_id)
+				->update('hierarchy', $new_data);
+		
+		}
+
 	}
 	
 }
