@@ -43,12 +43,24 @@ class Hierarchy extends CI_Controller {
 	{
 		
 		$data = array(
-			'parent_id' 	=> 33,
-			'title' 		=> 'o yeah!',
-			'url' 			=> 'asfd/asdf/69'
+			'parent_id' 	=> 24,
+			'title' 		=> 'Advertising',
+			'url' 			=> 'contact/advertising'
 		);
 		
 		$this->hierarchy_model->add_item($table, $data);
+	}
+	
+	function shift_left($hierarchy_id)
+	{
+		$this->hierarchy_model->shift_left($hierarchy_id);
+	}
+	
+	function new_parent($hierarchy_id, $parent_id)
+	{
+		echo '<pre>';
+		$this->hierarchy_model->new_parent($hierarchy_id, $parent_id);
+		
 	}
 	
 	function delete($hierarchy_id, $delete_children = FALSE)

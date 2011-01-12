@@ -211,18 +211,18 @@ class Hierarchy_model extends CI_Model {
 		}
 		
 		// Make sure this item exists in the given table
-		$item = $this->item_exists($data['parent_id']);
+		$parent = $this->item_exists($data['parent_id']);
 		
-		// If this item does not exist (except when parent_id is set to NULL)
-		if ( ! $item AND $data['parent_id'] != NULL)
+		// If a non-NULL parent_id was set, make sure it refers to a valid item
+		if ( ! $parent AND $data['parent_id'] != NULL)
 		{
 			return FALSE;
 		}
 		
-		// Insert Item
+		// Insert Item into hierarchy table
 		$this->db->insert('hierarchy', array('parent_id' => $data['parent_id']));
 		
-		// Insert new hierarchy
+		// Get insert ID
 		$insert_id = $this->db->insert_id();
 		
 		// Update extra data...
@@ -240,23 +240,16 @@ class Hierarchy_model extends CI_Model {
 		// If a parent ID was provided
 		if ($data['parent_id'])
 		{
-			$item['lineage'][] = $insert_id;
+			$parent['lineage'][] = $insert_id;
 			
 			$update_data = array(
-				'lineage' 	=> implode('-', $item['lineage']),
-				'deep' 		=> $item['deep'] + 1
+				'lineage' 	=> implode('-', $parent['lineage']),
+				'deep' 		=> $parent['deep'] + 1
 			);
 			
 			$this->db
 				->where('hierarchy_id', $insert_id)
 				->update('hierarchy', $update_data);
-				
-			// Add extra data
-			unset($data['parent_id']);
-			
-			$data['hierarchy_id'] = $insert_id;
-			
-			$this->db->insert($table, $data);
 		}
 		
 		// If no parent ID was provided
@@ -381,34 +374,36 @@ class Hierarchy_model extends CI_Model {
 	 *
 	 * @param int				Item ID
 	 * 
-	 * @return bool
+	 * @return null
 	 */
 	public function shift_left($hierarchy_id)
 	{
 		// Get item info
-		$item = $this->item_exists($id);
+		$item = $this->item_exists($hierarchy_id);
 		
 		// Make sure this is not a root element
-		if ( ! $item['parent_id'] )
+		if ( ! $parent = $this->item_exists($item['parent_id']) )
 		{
 			return FALSE;
 		}
 		
-		// Get all items that share this lineage
+		// Get the parent ID of the parent element
+		$parent_parent_id = $parent['parent_id'];
+		
+		// Get all items that share this lineage (that includes the item with the ID passed thru)
 		$query = $this->db
-			->where('lineage LIKE', $item['lineage'] . '%')
-			->where('lineage !=', $lineage)
+			->where('lineage LIKE', implode('-', $item['lineage']) . '%')
 			->order_by('hierarchy_id', 'DESC') // Foreign key constraints strike again
 			->get('hierarchy');
 			
-		// Loop through each result (we are guaranteed at least one result, however)
+		// Loop through each result (we are guaranteed at least one result)
 		foreach ($query->result() as $row)
 		{
 			$lineage_array = explode('-', $row->lineage);
 						
 			foreach ($lineage_array as $key=>$value)
 			{
-				if ($value == $hierarchy_id)
+				if ($value == $item['parent_id'])
 				{
 					unset($lineage_array[$key]);
 					
@@ -418,31 +413,90 @@ class Hierarchy_model extends CI_Model {
 			}
 			
 			$new_lineage = implode('-', $lineage_array);
-			
-			if (count($lineage_array) > 1)
-			{
-				end($lineage_array);
-				$new_parent = prev($lineage_array);
-				$new_deep = $row->deep - 1;
-			}
-			else
-			{
-				$new_parent = NULL;
-				$new_deep = 0;
-			}
+			$new_deep = (count($lineage_array) > 1) ? $row->deep - 1 : 0;
 			
 			$new_data = array(
-				'parent_id' => $new_parent,
 				'lineage' => $new_lineage,
 				'deep' => $new_deep
 			);
 			
+			// If we are on the item that we decided to shift left
+			if ($row->hierarchy_id == $hierarchy_id)
+			{
+				$new_data['parent_id'] = $parent_parent_id;
+			}
+			
+			// Update item
 			$this->db
 				->where('hierarchy_id', $row->hierarchy_id)
 				->update('hierarchy', $new_data);
-		
 		}
 
+	}
+
+	/**
+	 * Give an element a new parent (and bring all elements children along with it)
+	 *
+	 * @author Victor Michnowicz
+	 * 
+	 * @access public
+	 *
+	 * @param int				Item ID
+	 * 
+	 * @return null
+	 */
+	public function new_parent($hierarchy_id, $parent_id)
+	{
+		if ( ! $item = $this->item_exists($hierarchy_id) )
+		{
+			return FALSE;
+		}
+		
+		$parent = $parent_id ? $this->item_exists($parent_id) : NULL;
+		
+		// Get all items that share this lineage (that includes the item with the ID passed thru)
+		$query = $this->db
+			->where('lineage LIKE', implode('-', $item['lineage']) . '%')
+			->order_by('hierarchy_id', 'DESC') // Foreign key constraints strike again
+			->get('hierarchy');
+		
+		// Loop through each result (we are guaranteed at least one result)
+		foreach ($query->result() as $row)
+		{
+			// Explode our lineage array for this item
+			$lineage_array = explode('-', $row->lineage);
+			
+			// If the item we are moving has a parent
+			if ($parent)
+			{
+				$new_lineage = array_merge($parent['lineage'], array_slice($lineage_array, $item['deep']));
+			}
+			
+			// If we are making a root item
+			else
+			{
+				$new_lineage =  array_slice($lineage_array, $item['deep'] - 1);
+			}
+			
+			$data = array(
+				'lineage' => implode('-', $new_lineage),
+				'deep' =>count($new_lineage) - 1,
+			);
+			
+			// Update elements
+			$this->db
+				->where('hierarchy_id', $row->hierarchy_id)
+				->update('hierarchy', $data);
+		}
+		
+		// Update main element
+		$data = array(
+			'parent_id' => $parent_id ? $parent_id : NULL
+		);
+		
+		$this->db
+			->where('hierarchy_id', $hierarchy_id)
+			->update('hierarchy', $data);
 	}
 	
 }

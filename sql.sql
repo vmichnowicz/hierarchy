@@ -25,7 +25,6 @@ CREATE TABLE IF NOT EXISTS `comments` (
 -- Dumping data for table `comments`
 --
 
-
 -- --------------------------------------------------------
 
 --
@@ -39,7 +38,7 @@ CREATE TABLE IF NOT EXISTS `hierarchy` (
   `deep` smallint(8) unsigned NOT NULL,
   PRIMARY KEY (`hierarchy_id`),
   KEY `parent_id` (`parent_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=14 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=27 ;
 
 --
 -- Dumping data for table `hierarchy`
@@ -49,14 +48,29 @@ INSERT INTO `hierarchy` (`hierarchy_id`, `parent_id`, `lineage`, `deep`) VALUES
 (1, NULL, '1', 0),
 (2, NULL, '2', 0),
 (3, 2, '2-3', 1),
-(4, 2, '2-4', 1),
-(5, NULL, '5', 0),
-(6, 5, '5-6', 1),
-(7, 6, '5-6-7', 2),
-(8, 6, '5-6-8', 2),
-(11, 6, '5-6-11', 2),
-(12, 11, '5-6-11-12', 3),
-(13, 11, '5-6-11-13', 3);
+(4, 3, '2-3-4', 2),
+(5, 4, '2-3-4-5', 3),
+(6, 4, '2-3-4-6', 3),
+(7, 4, '2-3-4-7', 3),
+(8, 3, '2-3-8', 2),
+(9, 8, '2-3-8-9', 3),
+(10, 8, '2-3-8-10', 3),
+(11, 2, '2-11', 1),
+(12, 11, '2-11-12', 2),
+(13, 11, '2-11-13', 2),
+(14, 12, '2-11-12-14', 3),
+(15, 12, '2-11-12-15', 3),
+(16, 12, '2-11-12-16', 3),
+(17, NULL, '17', 0),
+(18, 17, '17-18', 1),
+(19, 17, '17-19', 1),
+(20, 17, '17-20', 1),
+(21, 18, '17-18-21', 2),
+(22, 18, '17-18-22', 2),
+(23, 18, '17-18-23', 2),
+(24, NULL, '24', 0),
+(25, 24, '24-25', 1),
+(26, 24, '24-26', 1);
 
 -- --------------------------------------------------------
 
@@ -71,7 +85,7 @@ CREATE TABLE IF NOT EXISTS `menu` (
   `url` varchar(128) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `hierarchy_id` (`hierarchy_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=12 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=48 ;
 
 --
 -- Dumping data for table `menu`
@@ -80,15 +94,30 @@ CREATE TABLE IF NOT EXISTS `menu` (
 INSERT INTO `menu` (`id`, `hierarchy_id`, `title`, `url`) VALUES
 (1, 1, 'Home', 'home'),
 (2, 2, 'About', 'about'),
-(3, 3, 'Our History', 'about/history'),
-(4, 4, 'Our Future', 'about/future'),
-(5, 5, 'Products', 'products'),
-(6, 6, 'Cars', 'products/cars'),
-(7, 7, 'Ford', 'products/cars/ford'),
-(8, 8, 'Chevrolet', 'products/cars/chevrolet'),
-(9, 11, 'Honda', 'products/cars/honda'),
-(10, 12, 'New', 'products/cars/honda/new'),
-(11, 13, 'Used', 'products/cars/honda/used');
+(3, 3, 'Company', 'about/company'),
+(5, 4, 'History', 'about/company/history'),
+(7, 5, 'The Beginning', 'about/company/history/the_beginning'),
+(9, 6, 'The Middle', 'about/company/history/the_middle'),
+(11, 7, 'Now', 'about/company/history/now'),
+(13, 8, 'People', 'about/company/people'),
+(15, 9, 'Management', 'about/company/people/management'),
+(17, 10, 'Staff', 'about/company/people/staff'),
+(19, 11, 'Affiliates', 'about/affiliates'),
+(21, 12, 'Members', 'about/affiliates/members'),
+(23, 13, 'Become a Member', 'about/affiliates/become_a_member'),
+(25, 14, 'Gary&rsquo;s Gadgets', 'about/affiliates/members/garys_gadgets'),
+(27, 15, 'Martha&rsquo;s Marinade', 'about/affiliates/members/marthas_marinade'),
+(30, 16, 'Sue&rsquo;s Soccer Balls', 'about/affiliates/members/sues_soccer_balls'),
+(31, 17, 'Stores', 'stores'),
+(32, 18, 'Locations', 'stores/locations'),
+(33, 19, 'Find a Store', 'stores/find_a_store'),
+(35, 20, 'Franchise Opportunities', 'stores/franchise_opportunities'),
+(37, 21, 'USA', 'stores/locations/usa'),
+(39, 22, 'Europe', 'stores/locations/europe'),
+(41, 23, 'North Pole', 'stores/locations/north_pole'),
+(43, 24, 'Contact', 'contact'),
+(44, 25, 'Sales', 'contact/sales'),
+(46, 26, 'Customer Relations', 'contact/customer_relations');
 
 --
 -- Constraints for dumped tables
