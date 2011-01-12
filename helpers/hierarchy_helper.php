@@ -6,6 +6,7 @@
  * @access public
  *
  * @param array			The list array
+ * @param string 		List template
  * @param string 		List attributes
  *
  * @return string
@@ -21,6 +22,7 @@ function hierarchical_ul($list, $template = NULL, $attributes = '')
  * @access public
  *
  * @param array			The list array
+ * @param string 		List template
  * @param string 		List attributes
  *
  * @return string
