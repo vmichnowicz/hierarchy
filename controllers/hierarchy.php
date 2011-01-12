@@ -28,13 +28,16 @@ class Hierarchy extends CI_Controller {
 		
 		// TO-DO - paginate (for comments perhaps...)
 		
+		// Attributes
+		$attributes = 'id="menu"';
+		
 		// Generate list
 		$list = $this->hierarchy_model->get_hierarchical_list($table, $sort);
 		
 		// Menu template
-		$template = '<a href="{url}">{title}</a> id:{hierarchy_id}';
+		$template = '<div class="item deep_{deep}"><a href="{url}" title="{hierarchy_id}">{title}</a></div>';
 		
-		$data['menu'] = hierarchical_ul($list, $template);
+		$data['menu'] = hierarchical_ul($list, $template, $attributes);
 		
 		$this->load->view('hierarchy', $data);
 	}
