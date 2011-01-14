@@ -2,35 +2,34 @@
 
 class Hierarchy_model extends CI_Model {
 	
-	public $items = NULL;
+	public $items_array = NULL;
 	
 	public function __construct()
 	{
 		$this->config->load('hierarchy_config');
 	}
 	
+	public function test($test) {
+		return 'this is a test: ' . $test;
+	}
+	
 	/**
-	 * Get all items from a provided table
+	 * Get all items from a provided table and generate an array
 	 *
 	 * @author Victor Michnowicz
 	 * 
 	 * @access public
 	 * 
 	 * @param string		Name of table
-	 * @param string		Name of row to sort on
+	 * @param string		Name of row to order by
+	 * @param string		Order ASC or DESC
 	 * 
 	 * @return array
 	 */
-	public function get_list($table = NULL, $sort = NULL)
+	public function get_items_array($table, $order_by, $order_by_order)
 	{
 		if ($table)
 		{
-			// Get sort order
-			if ( ! $sort )
-			{
-				$sort = 'lineage';
-			}
-			
 			// Run query
 			$query = $this->db->query("
 				SELECT *,
@@ -43,7 +42,7 @@ class Hierarchy_model extends CI_Model {
 					hierarchy as h,
 					$table as j
 				WHERE h.hierarchy_id = j.hierarchy_id
-				ORDER BY h.$sort
+				ORDER BY $order_by $order_by_order
 			");
 			
 			// If we got some results
@@ -54,7 +53,7 @@ class Hierarchy_model extends CI_Model {
 				
 				foreach ($query->result() as $row)
 				{
-					$this->items[$counter] = array(
+					$this->items_array[$counter] = array(
 						'hierarchy_id' 	=> $row->hierarchy_id,
 						'deep' 			=> $row->deep,
 						'lineage' 		=> $row->lineage ? explode('-', $row->lineage) : NULL,
@@ -65,14 +64,14 @@ class Hierarchy_model extends CI_Model {
 					// Add in extra data
 					foreach ($this->config->item('hierarchy_' . $table) as $extra_row)
 					{
-						$this->items[$counter][$extra_row] = $row->$extra_row;
+						$this->items_array[$counter][$extra_row] = $row->$extra_row;
 					}
 					
 					// Advance counter
 					$counter++;
 				}
 				
-				return $this->items;
+				return $this->items_array;
 			}
 			
 			// If no results were found
@@ -91,27 +90,28 @@ class Hierarchy_model extends CI_Model {
 	}
 	
 	/**
-	 * Get all items from a provided table and generate hierarchy
+	 * Get all items from a provided table and generate multi-dimensional array
 	 *
 	 * @author Victor Michnowicz
 	 * 
 	 * @access public
 	 * 
 	 * @param string		Name of table
-	 * @param string		Name of row to sort on
+	 * @param string		Name of row to order by
+	 * @param string		Order ASC or DESC
 	 * 
 	 * @return array
 	 */
-	public function get_hierarchical_list($table, $sort = NULL)
+	public function get_hierarchical_items_array($table, $order_by = NULL, $order_by_order = NULL)
 	{
 		// If user has NOT  already generated a list of items
-		if ( ! $this->items)
+		if ( ! $this->items_array )
 		{
 			// Get list of all items
-			$this->get_list($table, $sort);
+			$this->get_items_array($table, $order_by, $order_by_order);
 			
 			// If we don't have any items to display
-			if ($this->items == NULL)
+			if ($this->items_array == NULL)
 			{
 				return array();
 			}
@@ -122,7 +122,7 @@ class Hierarchy_model extends CI_Model {
 		$heirarchy = array();
 		
 		// Loop through all items
-		foreach ($this->items as $item)
+		foreach ($this->items_array as $item)
 		{	
 			$eval = '$heirarchy';
 				
@@ -131,12 +131,12 @@ class Hierarchy_model extends CI_Model {
 				// If this is NOT the first or last element
 				if (count($item['lineage']) > 1  AND $count != count($item['lineage']) - 1)
 				{
-					$eval .= '[' . $lineage . ']' . '["children"]';
+					$eval .= '[' . $lineage['hierarchy_id'] . ']' . '["children"]';
 				}
 				// If this IS the first and/or last element
 				else
 				{
-					$eval .= '[' . $lineage . ']' . '["root"]';
+					$eval .= '[' . $lineage['hierarchy_id'] . ']' . '["root"]';
 				}
 				$count++;
 			}
@@ -197,10 +197,10 @@ class Hierarchy_model extends CI_Model {
 	 * 
 	 * @access public
 	 *
-	 * @param string			Extra table name
-	 * @param array				Extra data
+	 * @param string		Extra table name
+	 * @param array			Extra data
 	 * 
-	 * @return null
+	 * @return bool
 	 */
 	public function add_item($table, $data)
 	{
@@ -264,6 +264,8 @@ class Hierarchy_model extends CI_Model {
 				->where('hierarchy_id', $insert_id)
 				->update('hierarchy', $update_data);
 		}
+
+		return TRUE;
 	}
 	
 	/**
@@ -273,12 +275,12 @@ class Hierarchy_model extends CI_Model {
 	 * 
 	 * @access public
 	 *
-	 * @param int				Item ID
-	 * @param bool				Shall we delete all of this items children?
+	 * @param int			Item ID
+	 * @param bool			Shall we delete all of this items children?
 	 * 
 	 * @return bool
 	 */
-	public function delete_item($hierarchy_id, $delete_children = FALSE)
+	public function delete_item($hierarchy_id, $delete_children)
 	{
 		$query = $this->db
 			->select('parent_id, lineage')
@@ -366,15 +368,15 @@ class Hierarchy_model extends CI_Model {
 	}
 	
 	/**
-	 * Shift a hierarchy item left
+	 * Shift a hierarchy item left (and bring its children along with it)
 	 *
 	 * @author Victor Michnowicz
 	 * 
 	 * @access public
 	 *
-	 * @param int				Item ID
+	 * @param int			Item ID
 	 * 
-	 * @return null
+	 * @return bool
 	 */
 	public function shift_left($hierarchy_id)
 	{
@@ -431,19 +433,22 @@ class Hierarchy_model extends CI_Model {
 				->where('hierarchy_id', $row->hierarchy_id)
 				->update('hierarchy', $new_data);
 		}
+		
+		return TRUE;
 
 	}
 
 	/**
-	 * Give an element a new parent (and bring all elements children along with it)
+	 * Give an element a new parent (and bring all children along with it)
 	 *
 	 * @author Victor Michnowicz
 	 * 
 	 * @access public
 	 *
-	 * @param int				Item ID
+	 * @param int			Item ID
+	 * @param int 			New parent ID
 	 * 
-	 * @return null
+	 * @return bool
 	 */
 	public function new_parent($hierarchy_id, $parent_id)
 	{
@@ -497,6 +502,59 @@ class Hierarchy_model extends CI_Model {
 		$this->db
 			->where('hierarchy_id', $hierarchy_id)
 			->update('hierarchy', $data);
+			
+		return TRUE;
+	}
+
+	/**
+	 * Generate full item lineage
+	 *
+	 * @author Victor Michnowicz
+	 * 
+	 * @access public
+	 *
+	 * @param int			Item ID
+	 * 
+	 * @return array
+	 */
+	public function item_lineage($hierarchy_id, $table)
+	{
+		if ( $item = $this->item_exists($hierarchy_id) )
+		{
+			$lineage_csv = implode(',', $item['lineage']);
+			
+			$query = $this->db->query("
+				SELECT *
+				FROM hierarchy as h, $table as j
+				WHERE
+					h.hierarchy_id = j.hierarchy_id AND
+					h.hierarchy_id IN ($lineage_csv)
+			");
+			
+			// Keep a counter so we can add in extra data later
+			$counter = 0;
+			
+			foreach ($query->result() as $row)
+			{
+				$data[$counter] = array(
+					'hierarchy_id' 	=> $row->hierarchy_id,
+					'deep' 			=> $row->deep,
+					'lineage' 		=> $row->lineage ? explode('-', $row->lineage) : NULL,
+					'parent_id' 	=> $row->parent_id ? $row->parent_id : NULL,
+				);
+				
+				// Add in extra data
+				foreach ($this->config->item('hierarchy_' . $table) as $extra_row)
+				{
+					$data[$counter][$extra_row] = $row->$extra_row;
+				}
+				
+				// Advance counter
+				$counter++;
+			}
+			
+			return $data;
+		}
 	}
 	
 }

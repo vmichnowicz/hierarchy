@@ -1,6 +1,6 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-class Hierarchy extends CI_Controller {
+class Hierarchy_demo extends CI_Controller {
 
 	function __construct()
 	{
@@ -18,8 +18,8 @@ class Hierarchy extends CI_Controller {
 		// Do nothing...
 	}
 	
-	function manage($table = NULL, $sort = NULL)
-	{
+	function manage($table = NULL, $order_by = NULL)
+	{	
 		// Make sure we have a table
 		if ( ! $table )
 		{
@@ -32,14 +32,17 @@ class Hierarchy extends CI_Controller {
 		$attributes = 'id="menu"';
 		
 		// Generate list
-		$list = $this->hierarchy_model->get_hierarchical_list($table, $sort);
+		$list = $this->hierarchy_model->get_hierarchical_list($table, 'lineage', 'ASC');
 		
 		// Menu template
 		$template = '<div class="item deep_{deep}"><a href="{url}" title="{hierarchy_id}">{title}</a></div>';
 		
 		$data['menu'] = hierarchical_ul($list, $template, $attributes);
+		//$data['menu'] = hierarchical_ul($list, 'hierarchy_template', $attributes);
 		
-		$this->load->view('hierarchy', $data);
+		//$this->load->view('hierarchy', $data);
+		
+		
 	}
 	
 	function add($table)
@@ -72,5 +75,5 @@ class Hierarchy extends CI_Controller {
 	}
 }
 
-/* End of file welcome.php */
-/* Location: ./application/controllers/hierarchy.php */
+/* End of file hierarchy_demo.php */
+/* Location: ./application/controllers/hierarchy_demo.php */

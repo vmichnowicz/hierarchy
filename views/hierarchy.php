@@ -15,22 +15,23 @@
 			padding: 5px;
 		}
 		#menu .deep_0 {
-			background-color: purple;
+			background-color: #F6CEE3;
 		}
 		#menu .deep_1 {
-			background-color: red;
+			background-color: #CECEF6;
 		}
 		#menu .deep_2 {
-			background-color: orange;
+			background-color: #CEF6F5;
 		}
 		#menu .deep_3 {
-			background-color: yellow;
+			background-color: #CEF6CE;
 		}
 		#menu .deep_4 {
-			background-color: green;
+			background-color: #F6E3CE;
 		}
 		#menu a {
 			line-height: 25px;
+			color: #555;
 		}
 		
 	</style>
