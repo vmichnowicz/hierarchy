@@ -35,14 +35,7 @@ class Hierarchy_demo extends CI_Controller {
 		$list = $this->hierarchy_model->get_hierarchical_list($table, 'lineage', 'ASC');
 		
 		// Menu template
-		$template = '<div class="item deep_{deep}"><a href="{url}" title="{hierarchy_id}">{title}</a></div>';
-		
-		$data['menu'] = hierarchical_ul($list, $template, $attributes);
-		//$data['menu'] = hierarchical_ul($list, 'hierarchy_template', $attributes);
-		
-		//$this->load->view('hierarchy', $data);
-		
-		
+		$template = '<div class="item deep_{deep}"><a href="{url}" title="{hierarchy_id}">{title}</a></div>';	
 	}
 	
 	function add($table)
