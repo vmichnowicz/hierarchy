@@ -19,7 +19,7 @@ class Hierarchy
 	
 	public $table;
 	public $extras;
-	private $is_ordered = FALSE;
+	public $is_ordered = FALSE;
 	
 	public $order_by = 'lineage';
 	public $order_by_order = 'ASC';
@@ -73,8 +73,8 @@ class Hierarchy
 		// Get table columns from config file
 		$this->extras = $this->CI->config->item('hierarchy_' . $table);
 		
-		// Is this table ordered? (look for hierarcy_order column)
-		$this->is_ordered = in_array('hierarchy_id', $this->extras);
+		// Is this table ordered? (look for "hierarchy_order")
+		$this->is_ordered = in_array('hierarchy_order', $this->extras);
 		
 		return $this;
 	}
@@ -106,7 +106,7 @@ class Hierarchy
 	 */
 	function order_by_order($order_by_order)
 	{
-		$this->order_by_order = ( str_to_lower($order_by_order) == 'asc' || str_to_lower($order_by_order) == 'desc' ) ? str_to_upper($order_by_order) : 'ASC'; 
+		$this->order_by_order = ( strtolower($order_by_order) == 'asc' || strtolower($order_by_order) == 'desc' ) ? strtoupper($order_by_order) : 'ASC'; 
 	
 		return $this;
 	}
@@ -142,7 +142,7 @@ class Hierarchy
 	{
 		if ( ! $this->items_array )
 		{
-			$this->get_items_array();
+			$this->get_items_array($this->table, $this->order_by, $this->order_by_order);
 		}
 		
 		$this->hierarchial_items_array = $this->CI->hierarchy_model->get_hierarchical_items_array($this->table, $this->order_by, $this->order_by_order);
@@ -200,17 +200,6 @@ class Hierarchy
 		$out .= '</' . $type . '>';
 		
 		return $out;
-	}
-	
-	public function new_item_order($hierarchy_id, $new_order)
-	{
-		// get info item
-		
-		// get info of another item with same parent that has same new_order
-		
-		// set new order in both items
-		
-		
 	}
 	
 }

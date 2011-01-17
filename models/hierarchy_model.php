@@ -2,15 +2,11 @@
 
 class Hierarchy_model extends CI_Model {
 	
-	public $items_array = NULL;
+	public $items_array = NULL; 
 	
 	public function __construct()
 	{
 		$this->config->load('hierarchy_config');
-	}
-	
-	public function test($test) {
-		return 'this is a test: ' . $test;
 	}
 	
 	/**
@@ -49,22 +45,23 @@ class Hierarchy_model extends CI_Model {
 			if ($query->num_rows() > 0)
 			{
 				// Keep a counter so we can add in extra data later
-				$counter = 0;
+				$counter = 1;
 				
 				foreach ($query->result() as $row)
 				{
-					$this->items_array[$counter] = array(
+					$this->items_array[$row->hierarchy_id] = array(
 						'hierarchy_id' 	=> $row->hierarchy_id,
 						'deep' 			=> $row->deep,
 						'lineage' 		=> $row->lineage ? explode('-', $row->lineage) : NULL,
 						'parent_id' 	=> $row->parent_id ? $row->parent_id : NULL,
-						'num_children' 	=> $row->num_children
+						'num_children' 	=> $row->num_children,
+						'surrogate_id' 	=> $counter
 					);
 					
 					// Add in extra data
 					foreach ($this->config->item('hierarchy_' . $table) as $extra_row)
 					{
-						$this->items_array[$counter][$extra_row] = $row->$extra_row;
+						$this->items_array[$row->hierarchy_id][$extra_row] = $row->$extra_row;
 					}
 					
 					// Advance counter
@@ -128,16 +125,18 @@ class Hierarchy_model extends CI_Model {
 				
 			foreach ($item['lineage'] as $lineage)
 			{
-				// If this is NOT the first or last element
-				if (count($item['lineage']) > 1  AND $count != count($item['lineage']) - 1)
+				
+				if ($lineage != $item['hierarchy_id'])
 				{
-					$eval .= '[' . $lineage['hierarchy_id'] . ']' . '["children"]';
+					//$eval .= '[' . $lineage . ']' . '["children"]';
+					$eval .= '[' . $this->items_array[$lineage]['surrogate_id'] . ']' . '["children"]';
 				}
-				// If this IS the first and/or last element
 				else
 				{
-					$eval .= '[' . $lineage['hierarchy_id'] . ']' . '["root"]';
+					//$eval .= '[' . $lineage . ']' . '["root"]';
+					$eval .= '[' . $this->items_array[$lineage]['surrogate_id'] . ']' . '["root"]';
 				}
+				
 				$count++;
 			}
 			
@@ -149,7 +148,7 @@ class Hierarchy_model extends CI_Model {
 			eval($eval);
 		}
 
-		// Return heirarchial list of all elements
+		// Return heirarchial list of all elements		
 		return $heirarchy;
 	}
 	
@@ -202,7 +201,7 @@ class Hierarchy_model extends CI_Model {
 	 * 
 	 * @return bool
 	 */
-	public function add_item($table, $data)
+	public function add_item($data)
 	{
 		// Make sure the parent_id is set
 		if ( ! array_key_exists('parent_id', $data) )
@@ -210,13 +209,32 @@ class Hierarchy_model extends CI_Model {
 			return FALSE;
 		}
 		
-		// Make sure this item exists in the given table
+		// See if this parent item exists in the given table
 		$parent = $this->item_exists($data['parent_id']);
 		
 		// If a non-NULL parent_id was set, make sure it refers to a valid item
 		if ( ! $parent AND $data['parent_id'] != NULL)
 		{
 			return FALSE;
+		}
+		
+		// If we want to set an order
+		if ($this->hierarchy->is_ordered)
+		{
+			$query = $this->db->query("
+				SELECT *
+				FROM hierarchy as h, {$this->hierarchy->table} as j
+				WHERE
+					parent_id = {$data['parent_id']} AND
+					h.hierarchy_id = j.hierarchy_id
+				ORDER BY hierarchy_order DESC
+				LIMIT 1
+			");
+				
+			$row = $query->row(); 
+			
+			// Get highest order and add one
+			$data['hierarchy_order'] = $row->hierarchy_order + 1;
 		}
 		
 		// Insert Item into hierarchy table
@@ -226,7 +244,7 @@ class Hierarchy_model extends CI_Model {
 		$insert_id = $this->db->insert_id();
 		
 		// Update extra data...
-		foreach ($this->config->item('hierarchy_' . $table) as $extra_row)
+		foreach ($this->config->item('hierarchy_' . $this->hierarchy->table) as $extra_row)
 		{
 			$extra_data[$extra_row] = $data[$extra_row];
 		}
@@ -235,7 +253,7 @@ class Hierarchy_model extends CI_Model {
 		$extra_data['hierarchy_id'] = $insert_id;
 		
 		// Add item in database
-		$this->db->insert($table, $extra_data);
+		$this->db->insert($this->hierarchy->table, $extra_data);
 		
 		// If a parent ID was provided
 		if ($data['parent_id'])
@@ -555,6 +573,64 @@ class Hierarchy_model extends CI_Model {
 			
 			return $data;
 		}
+	}
+	
+	public function new_order($hierarchy_id, $new_order)
+	{
+		$new_order = (int)$new_order;
+		
+		// Get element
+		$query = $this->db->query("
+			SELECT *
+			FROM hierarchy as h, {$this->hierarchy->table} as j
+			WHERE
+				h.hierarchy_id = j.hierarchy_id AND
+				h.hierarchy_id = $hierarchy_id
+			LIMIT 1
+		");
+		
+		// If this item exists
+		if ($query->num_rows() > 0)
+		{
+			$row = $query->row();
+			
+			$parent_id = $row->parent_id;
+			$current_order = $row->hierarchy_order;
+			
+			// Get all items with the same parent ID that have an order between 
+			$orders = $this->db->query("
+				SELECT *
+				FROM hierarchy as h, {$this->hierarchy->table} as j
+				WHERE
+					h.hierarchy_id = j.hierarchy_id AND
+					parent_id = $parent_id AND
+					hierarchy_order BETWEEN $new_order AND $current_order
+			");
+			
+			foreach ($orders->result() as $row)
+			{
+				// If this is the element that we want to move
+				if ($row->hierarchy_order == $current_order)
+				{
+					$this->db
+						->where('hierarchy_id', $row->hierarchy_id)
+						->update($this->hierarchy->table, array('hierarchy_order' => $new_order));
+				}
+				else
+				{
+					$this->db
+						->where('hierarchy_id', $row->hierarchy_id)
+						->update($this->hierarchy->table, array('hierarchy_order' => $row->hierarchy_order + 1));
+				}
+			}
+		}
+	}
+	
+	public function reorder($array = NULL)
+	{
+		$array = $array ? $array : $this->hierarchy->hierarchial_items_array;
+		
+		print_r($array);
 	}
 	
 }

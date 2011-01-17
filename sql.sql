@@ -81,6 +81,7 @@ INSERT INTO `hierarchy` (`hierarchy_id`, `parent_id`, `lineage`, `deep`) VALUES
 CREATE TABLE IF NOT EXISTS `menu` (
   `id` int(16) unsigned NOT NULL AUTO_INCREMENT,
   `hierarchy_id` int(64) unsigned NOT NULL,
+  `hierarchy_order` int(64) unsigned NOT NULL,
   `title` varchar(64) NOT NULL,
   `url` varchar(128) NOT NULL,
   PRIMARY KEY (`id`),
