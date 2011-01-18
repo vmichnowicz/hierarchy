@@ -11,24 +11,27 @@ class Hierarchy_demo extends CI_Controller {
 		
 		// Load libraries
 		$this->load->library('hierarchy');
+		
+		// Load helpers
+		$this->load->helper('url');
 	}
 
 	function index()
 	{
-		// Do nothing...
-	}
-	
-	function manage($table, $order_by = 'lineage', $order_by_order = NULL)
-	{	
-		// TO-DO - paginate (for comments perhaps...)
+		$menu = new $this->hierarchy;
+		$comments = new $this->hierarchy;
 		
 		// Generage menu
-		$data['menu'] = $this->hierarchy
+		$data['menu'] = $menu
 			->table('menu')
-			->order_by($order_by)
-			->order_by_order($order_by_order)
 			->get_hierarchical_items_array()
 			->generate_hierarchial_list('hierarchy_template', 'ul', 'id="menu"');
+		
+		
+		$data['comments'] = $comments
+			->table('comments')
+			->get_hierarchical_items_array()
+			->generate_hierarchial_list('hierarchy_comments_template', 'ul', 'id="comments"');
 		
 		$this->load->view('hierarchy', $data);
 	}
@@ -71,9 +74,13 @@ class Hierarchy_demo extends CI_Controller {
 		$this->hierarchy->table('menu')->new_order($hierarchy_id, $new_order);
 	}
 	
-	function reorder($table)
+	function reorder($table, $order_by = 'lineage', $order_by_order = 'ASC')
 	{
-		$this->hierarchy->table($table)->reorder();
+		$this->hierarchy
+			->table($table)
+			->order_by($order_by)
+			->order_by_order($order_by_order)
+			->reorder();
 	}
 	
 	function test($test)
@@ -84,6 +91,25 @@ class Hierarchy_demo extends CI_Controller {
 	function delete($hierarchy_id, $delete_children = FALSE)
 	{
 		$this->hierarchy_model->delete_item($hierarchy_id, $delete_children);
+	}
+	
+	function add_comment()
+	{
+		$data = array(
+			'parent_id' => $this->input->post('parent_id') ? $this->input->post('parent_id') : NULL,
+			'title' 	=> htmlentities($this->input->post('title')),
+			'comment' 	=> htmlentities($this->input->post('comment')),
+			'author' 	=> htmlentities($this->input->post('name')),
+			'email' 	=> htmlentities($this->input->post('email')),
+			'url' 		=> htmlentities($this->input->post('url')),
+			'timestamp' => time()
+		);
+		
+		$this->hierarchy
+			->table('comments')
+			->add_item($data);
+			
+		redirect('hierarchy_demo');
 	}
 }
 

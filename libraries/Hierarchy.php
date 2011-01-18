@@ -9,7 +9,7 @@
 *
 * Description: Get your hierarchy on
 *
-* Requirements: CodeIgniter 2(?), PHP 5, and MySQL with InoDB support
+* Requirements: CodeIgniter 2(?), PHP 5, and MySQL with InnoDB support
 *
 */
 
@@ -80,6 +80,23 @@ class Hierarchy
 	}
 	
 	/**
+	 * Set template
+	 * 
+	 * @access public
+	 * 
+	 * @param string		Name of template file (located in views folder)
+	 * 
+	 * @return object
+	 */
+	public function template($template)
+	{
+		// Set table name
+		$this->template = $template;
+		
+		return $this;
+	}
+	
+	/**
 	 * Set order by
 	 * 
 	 * @access public
@@ -145,8 +162,8 @@ class Hierarchy
 			$this->get_items_array($this->table, $this->order_by, $this->order_by_order);
 		}
 		
-		$this->hierarchial_items_array = $this->CI->hierarchy_model->get_hierarchical_items_array($this->table, $this->order_by, $this->order_by_order);
-		
+		$this->hierarchial_items_array = $this->CI->hierarchy_model->get_hierarchical_items_array($this->items_array);
+
 		return $this;
 	}
 	
@@ -163,11 +180,10 @@ class Hierarchy
 	 */
 	public function generate_hierarchial_list($template = NULL, $type = 'ul', $attributes = '')
 	{
-		$this->template = $template ? $template : $this->template;
-		$this->attributes = $attributes ? $attributes : $this->attributes;
+
 		
 		// Return HTML list
-		return $this->_list($type, $this->hierarchial_items_array);
+		return $this->_list($type, $template, $this->hierarchial_items_array, $attributes);
 	}
 
 	/**
@@ -181,17 +197,17 @@ class Hierarchy
 	 * 
 	 * @return string
 	 */
-	private function _list($type, $list)
+	private function _list($type, $template, $list, $attributes)
 	{
-		$out = '<' . $type . ' ' . $this->attributes . '>';
+		$out = '<' . $type . ' ' . $attributes . '>';
 		
 		foreach ($list as $item)
 		{	
-			$out .=  '<li>' . $this->CI->parser->parse($this->template, $item['root'], TRUE);
+			$out .=  '<li>' . $this->CI->parser->parse($template, $item['root'], TRUE);
 			
 			if ( isset($item['children']) )
 			{
-				$out .= $this->_list($type, $item['children']);
+				$out .= $this->_list($type, $template, $item['children'], '');
 			}
 			
 			$out .= '</li>';
@@ -203,4 +219,3 @@ class Hierarchy
 	}
 	
 }
-	

@@ -32,13 +32,13 @@ class Hierarchy_model extends CI_Model {
 					(
 						SELECT COUNT(*)
 						FROM hierarchy
-						WHERE hierarchy.lineage LIKE (CONCAT(h.lineage,'%')) AND hierarchy.lineage != h.lineage
+						WHERE hierarchy.lineage LIKE (CONCAT(h.lineage,'-%')) AND hierarchy.lineage != h.lineage
 					) AS num_children
 				FROM
 					hierarchy as h,
 					$table as j
 				WHERE h.hierarchy_id = j.hierarchy_id
-				ORDER BY $order_by $order_by_order
+				ORDER BY deep ASC, $order_by $order_by_order
 			");
 			
 			// If we got some results
@@ -49,7 +49,7 @@ class Hierarchy_model extends CI_Model {
 				
 				foreach ($query->result() as $row)
 				{
-					$this->items_array[$row->hierarchy_id] = array(
+					$items_array[$row->hierarchy_id] = array(
 						'hierarchy_id' 	=> $row->hierarchy_id,
 						'deep' 			=> $row->deep,
 						'lineage' 		=> $row->lineage ? explode('-', $row->lineage) : NULL,
@@ -61,14 +61,14 @@ class Hierarchy_model extends CI_Model {
 					// Add in extra data
 					foreach ($this->config->item('hierarchy_' . $table) as $extra_row)
 					{
-						$this->items_array[$row->hierarchy_id][$extra_row] = $row->$extra_row;
+						$items_array[$row->hierarchy_id][$extra_row] = $row->$extra_row;
 					}
 					
 					// Advance counter
 					$counter++;
 				}
 				
-				return $this->items_array;
+				return $items_array;
 			}
 			
 			// If no results were found
@@ -99,27 +99,14 @@ class Hierarchy_model extends CI_Model {
 	 * 
 	 * @return array
 	 */
-	public function get_hierarchical_items_array($table, $order_by = NULL, $order_by_order = NULL)
+	public function get_hierarchical_items_array($items_array)
 	{
-		// If user has NOT  already generated a list of items
-		if ( ! $this->items_array )
-		{
-			// Get list of all items
-			$this->get_items_array($table, $order_by, $order_by_order);
-			
-			// If we don't have any items to display
-			if ($this->items_array == NULL)
-			{
-				return array();
-			}
-		}
-		
 		$count = 0;
 		
 		$heirarchy = array();
 		
 		// Loop through all items
-		foreach ($this->items_array as $item)
+		foreach ($items_array as $item)
 		{	
 			$eval = '$heirarchy';
 				
@@ -129,12 +116,12 @@ class Hierarchy_model extends CI_Model {
 				if ($lineage != $item['hierarchy_id'])
 				{
 					//$eval .= '[' . $lineage . ']' . '["children"]';
-					$eval .= '[' . $this->items_array[$lineage]['surrogate_id'] . ']' . '["children"]';
+					$eval .= '[' . $items_array[$lineage]['surrogate_id'] . ']' . '["children"]';
 				}
 				else
 				{
 					//$eval .= '[' . $lineage . ']' . '["root"]';
-					$eval .= '[' . $this->items_array[$lineage]['surrogate_id'] . ']' . '["root"]';
+					$eval .= '[' . $items_array[$lineage]['surrogate_id'] . ']' . '["root"]';
 				}
 				
 				$count++;
@@ -575,6 +562,18 @@ class Hierarchy_model extends CI_Model {
 		}
 	}
 	
+	/**
+	 * Give an element a new order
+	 *
+	 * @author Victor Michnowicz
+	 * 
+	 * @access public
+	 *
+	 * @param int			Item ID
+	 * @param int 			New order
+	 * 
+	 * @return null
+	 */
 	public function new_order($hierarchy_id, $new_order)
 	{
 		$new_order = (int)$new_order;
@@ -626,11 +625,44 @@ class Hierarchy_model extends CI_Model {
 		}
 	}
 	
-	public function reorder($array = NULL)
-	{
-		$array = $array ? $array : $this->hierarchy->hierarchial_items_array;
+	/**
+	 * Reorder all hierarchy items of a given group
+	 *
+	 * @author Victor Michnowicz
+	 * 
+	 * @access public
+	 * 
+	 * @return null
+	 */
+	public function reorder()
+	{	
+		// Get all items
+		$query = $this->db
+			->order_by($this->hierarchy->order_by, $this->hierarchy->order_by_order)
+			->join($this->hierarchy->table, $this->hierarchy->table . '.hierarchy_id = hierarchy.hierarchy_id')
+			->get('hierarchy');
 		
-		print_r($array);
+		if ($query->num_rows() > 0)
+		{
+			// Create an array of hierarchy items ordered by parent ID
+			foreach ($query->result() as $row)
+			{
+				$data[$row->parent_id][] = $row->hierarchy_id;
+			}
+			
+			// For each parent group
+			foreach ($data as $parent_group)
+			{
+				// For each item in our parent group
+				foreach ($parent_group as $key=>$value)
+				{
+					// Update database with new order
+					$this->db
+						->where('hierarchy_id', $value)
+						->update($this->hierarchy->table, array('hierarchy_order' => $key));
+				}
+			}
+		}
 	}
 	
 }
