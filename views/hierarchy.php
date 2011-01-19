@@ -110,6 +110,25 @@
 			text-shadow: 0px 1px 0px #fff;
 		}
 		
+		#comments blockquote {
+			margin: 5px;
+			padding: 0px;
+		}
+		
+		#comments cite {
+			font-size: 11px;
+		}
+		
+		#comments cite a:link,
+		#comments cite a:visited {
+			color: #F78181;
+		}
+		
+		#comments cite a:hover,
+		#comments cite a:focus {
+			color: #F7BE81;
+		}
+		
 		#comments em.details {
 			font-size: 11px;
 			color: #999;
@@ -123,6 +142,10 @@
 			padding: 0px;
 		}
 		
+		#add_comment div {
+			margin: 15px 0px;
+		}
+		
 		#add_comment label {
 			display: inline-block;
 			width: 25%;
@@ -130,6 +153,7 @@
 			font-weight: bold;
 			text-indent: 5px;
 			line-height: 40px;
+			vertical-align: top;
 		}
 		
 		#add_comment input[type="text"],
@@ -139,6 +163,7 @@
 			text-shadow: 0px 1px 0px black;
 			box-shadow: 0px 0px 5px black inset;
 			padding: 1%;
+			margin: 0px;
 			border: 0px none;
 			background-color: #555;
 			display: inline-block;
@@ -155,6 +180,11 @@
 		#add_comment textarea:hover {
 			color: #fff;
 			background-color: #666;
+		}
+		
+		#add_comment input[type="submit"] {
+			float: right;
+			margin-right: 1%;
 		}
 		
 	</style>
@@ -231,7 +261,7 @@
 		</div>
 		<div>
 			<input type="hidden" name="parent_id" id="parent_id" value="" />
-			<input type="submit" name="Submit Comment" />
+			<input type="submit" value="Submit Comment" />
 		</div>
 	</fieldset>
 </form>

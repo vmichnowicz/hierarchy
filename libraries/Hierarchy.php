@@ -27,7 +27,7 @@ class Hierarchy
 	public $items_array;
 	public $hierarchial_items_array;
 	
-	public $template = 'hierarchy_template';
+	public $template;
 	public $attributes = '';
 	
 	public function __construct()
@@ -35,6 +35,7 @@ class Hierarchy
 		$this->CI =& get_instance();
 		
 		$this->CI->load->model('hierarchy_model');
+		$this->CI->load->helper('hierarchy');
 		$this->CI->config->load('hierarchy_config');
 	}
 	
@@ -88,10 +89,10 @@ class Hierarchy
 	 * 
 	 * @return object
 	 */
-	public function template($template)
+	public function template($template = NULL)
 	{
-		// Set table name
-		$this->template = $template;
+		// Set template name (if no name provided, default to hierarchy_tablename_template)
+		$this->template = $template ? $template : 'hierarchy_' . $this->table . '_template';
 		
 		return $this;
 	}
@@ -180,7 +181,17 @@ class Hierarchy
 	 */
 	public function generate_hierarchial_list($template = NULL, $type = 'ul', $attributes = '')
 	{
-
+		// If no template was provided AND there isno current template set
+		if ( ! $template AND ! $this->template )
+		{
+			$this->template();
+		}
+		
+		// If no list has already been created
+		if ( ! $this->hierarchial_items_array )
+		{
+			$this->get_hierarchical_items_array();
+		}
 		
 		// Return HTML list
 		return $this->_list($type, $template, $this->hierarchial_items_array, $attributes);
@@ -203,7 +214,7 @@ class Hierarchy
 		
 		foreach ($list as $item)
 		{	
-			$out .=  '<li>' . $this->CI->parser->parse($template, $item['root'], TRUE);
+			$out .= '<li>' . $this->CI->parser->parse($template, $item['root'], TRUE);
 			
 			if ( isset($item['children']) )
 			{

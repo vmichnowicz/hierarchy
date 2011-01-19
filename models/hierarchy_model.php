@@ -61,7 +61,16 @@ class Hierarchy_model extends CI_Model {
 					// Add in extra data
 					foreach ($this->config->item('hierarchy_' . $table) as $extra_row)
 					{
-						$items_array[$row->hierarchy_id][$extra_row] = $row->$extra_row;
+						// See if helper function exists to help format this data
+						if (function_exists($table . '_' . $extra_row))
+						{
+							$function = $table . '_' . $extra_row;
+							$items_array[$row->hierarchy_id][$extra_row] = $function($row->$extra_row);
+						}
+						else
+						{
+							$items_array[$row->hierarchy_id][$extra_row] = $row->$extra_row;
+						}
 					}
 					
 					// Advance counter

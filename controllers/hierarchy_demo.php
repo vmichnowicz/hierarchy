@@ -24,13 +24,11 @@ class Hierarchy_demo extends CI_Controller {
 		// Generage menu
 		$data['menu'] = $menu
 			->table('menu')
-			->get_hierarchical_items_array()
+			->order_by('hierarchy_order')
 			->generate_hierarchial_list('hierarchy_template', 'ul', 'id="menu"');
-		
 		
 		$data['comments'] = $comments
 			->table('comments')
-			->get_hierarchical_items_array()
 			->generate_hierarchial_list('hierarchy_comments_template', 'ul', 'id="comments"');
 		
 		$this->load->view('hierarchy', $data);
