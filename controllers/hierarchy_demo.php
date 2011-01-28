@@ -11,6 +11,7 @@ class Hierarchy_demo extends CI_Controller {
 		
 		// Load libraries
 		$this->load->library('hierarchy');
+		$this->load->library('form_validation');
 		
 		// Load helpers
 		$this->load->helper('url');
@@ -91,8 +92,51 @@ class Hierarchy_demo extends CI_Controller {
 		$this->hierarchy_model->delete_item($hierarchy_id, $delete_children);
 	}
 	
+	function url_check($url)
+	{
+		if (filter_var('example.com', FILTER_VALIDATE_URL))
+		{
+			return TRUE;
+		}
+		else
+		{
+			$this->form_validation->set_message('url_check', 'Invalid %s');
+			return FALSE;
+		}
+	}
+	
 	function add_comment()
 	{
+
+		// Form validation rules
+		$config = array(
+			array(
+				'filed' => 'title',
+				'label' => 'Title',
+				'rules' => 'trim|required'
+			),
+			array(
+				'filed' => 'comment',
+				'label' => 'Comment',
+				'rules' => 'trim|required|min_length[10]'
+			),
+			array(
+				'filed' => 'author',
+				'label' => 'Author',
+				'rules' => 'trim|required'
+			),
+			array(
+				'filed' => 'email',
+				'label' => 'Email',
+				'rules' => 'trim|required|valid_email'
+			),
+			array(
+				'filed' => 'url',
+				'label' => 'URL',
+				'rules' => 'callback_valid_url'
+			)
+		);
+		
 		$data = array(
 			'parent_id' => $this->input->post('parent_id') ? $this->input->post('parent_id') : NULL,
 			'title' 	=> htmlentities($this->input->post('title')),
@@ -103,11 +147,50 @@ class Hierarchy_demo extends CI_Controller {
 			'timestamp' => time()
 		);
 		
-		$this->hierarchy
-			->table('comments')
-			->add_item($data);
+
+		
+		// If form validation was successful
+		if ($this->form_validation->run())
+		{
+		
+			// Add comment
+			$this->hierarchy
+				->table('comments')
+				->add_item($data);
+					
+			// If this is an AJAX request
+			if ($this->input->is_ajax_request())
+			{
+						
+			}
 			
-		redirect('hierarchy_demo');
+			// If this is not an AJAX request
+			else
+			{
+				echo 'comment added!';
+			}
+		}
+		
+		// If page was not POSTed to or form validation failed
+		else
+		{
+			// If form validation was successful
+			if ($this->form_validation->run())
+			{
+				// Add comment
+				$this->hierarchy
+					->table('comments')
+					->add_item($data);
+			}
+			
+			// If form validation failed (or was not run)
+			else
+			{
+				redirect('hierarchy_demo');
+			}
+		}
+
+		
 	}
 }
 
