@@ -125,6 +125,7 @@ class Hierarchy_demo extends CI_Controller {
 	
 	function add_comment()
 	{
+
 		if ( ! $_POST)
 		{
 			redirect('hierarchy_demo');
@@ -161,10 +162,10 @@ class Hierarchy_demo extends CI_Controller {
 		
 		$this->form_validation->set_rules($this->comment_config);
 		
+		
 		// If form validation was successful
 		if ($this->form_validation->run())
-		{
-			
+		{	
 			$data = array(
 				'parent_id' => $this->input->post('parent_id') ? $this->input->post('parent_id') : NULL,
 				'title' 	=> $this->input->post('title'),
@@ -212,6 +213,7 @@ class Hierarchy_demo extends CI_Controller {
 				// Echo out JSON error messages
 				echo json_encode($data);
 			}
+			
 			// This is not an AJAX request
 			else
 			{
@@ -220,7 +222,6 @@ class Hierarchy_demo extends CI_Controller {
 			}
 		}
 
-		
 	}
 }
 
