@@ -1,11 +1,13 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> 
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 	<title>CI Hierarchy</title>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 	<style type="text/css">
 	
 		body {
-			font: 13px Verdana, sans-serif;
+			font: 13px/18px Verdana, sans-serif;
 			color: #333;
+			margin: 1%;
 		}
 		
 		h1 {
@@ -86,6 +88,12 @@
 			color: #888;
 		}
 		
+		#menu fieldset {
+			border: 0px;
+			margin: 0px;
+			padding: 0px;
+		}
+		
 		/* COMMENTS */
 		
 		#comments {
@@ -136,6 +144,10 @@
 		
 		/* ADD COMMENT */
 		
+		#add_comment {
+			width: 710px;
+		}
+		
 		#add_comment fieldset {
 			border: 0px none;
 			margin: 0px;
@@ -148,12 +160,14 @@
 		
 		#add_comment label {
 			display: inline-block;
-			width: 25%;
-			min-height: 40px;
+			width: 220px;
 			font-weight: bold;
-			text-indent: 5px;
-			line-height: 40px;
+			margin-right: 20px;
 			vertical-align: top;
+		}
+		
+		#add_comment em.req {
+			color: red;
 		}
 		
 		#add_comment input[type="text"],
@@ -162,16 +176,16 @@
 			color: #efefef;
 			text-shadow: 0px 1px 0px black;
 			box-shadow: 0px 0px 5px black inset;
-			padding: 1%;
-			margin: 0px;
+			padding: 5px;
 			border: 0px none;
+			margin: 0px;
 			background-color: #555;
 			display: inline-block;
-			width: 72%;
+			width: 460px;
 		}
 		
-		textarea {
-			height: 80px;
+		#add_comment textarea {
+			height: 120px;
 		}
 		
 		#add_comment input[type="text"]:focus,
@@ -187,15 +201,37 @@
 			margin-right: 1%;
 		}
 		
+		#add_comment div.error {
+			margin-top: 0px;
+			font-size: 12px;
+			color: #fff;
+			text-shadow: 0px 1px 0px rgba(0,0,0,.25);
+			margin-left: 240px;
+			background-color: #f78181;
+			padding: 5px;
+			box-shadow: 0px 0px 5px rgba(0,0,0,.15) inset;
+			border-radius: 0px 0px 5px 5px;
+			width: 460px;
+		}
+		
+		#add_comment input.error,
+		#add_comment textarea.error {
+			box-shadow: 0px 0px 5px red inset;
+		}
+		
 	</style>
-	
+	<script type="text/javascript">
+		var BASE_URL = "<?php echo rtrim(site_url(), '/').'/';?>";
+	</script>
 	<script type="text/javascript" src="http://www.google.com/jsapi"></script>
 	<script type="text/javascript">
 		google.load("jquery", "1.4.4");
 		google.setOnLoadCallback(function() {
 	    	
+	    	// Add comment form
 	    	var add_comment = $('#add_comment');
 	    	
+	    	// Move add comment form
 	    	$('button.reply').live('click', function() {  		
 	    		var parent = $(this).closest('div');
 	    		var id = $(parent).attr('id');
@@ -211,6 +247,7 @@
 	    		$(this).html('Cancel Reply').addClass('active');
 	    	});
 	    	
+	    	// Cancel reply
 	    	$('button.reply.active').live('click', function() {
 	    		
 	    		// Update hidden value
@@ -221,6 +258,66 @@
 	    		
 	    		// Change button
 	    		$(this).html('Reply').removeClass('active');
+	    		
+	    	});
+	    	
+	    	// Submit comment
+	    	$(add_comment).live('submit', function(e) {
+	    		
+	    		e.preventDefault();
+	    		
+	    		// Clear error messages
+	    		$('div.error').remove();
+	    		$('.error').removeClass('error');
+	    		
+	    		var form = $(this);
+	    		var action = $(add_comment).attr('action');
+	    		
+	    		// Disable submit button
+	    		$(form).find('input[type="submit"]').attr('disabled', true);
+	    		
+	    		$.post(action, $(add_comment).serialize(), function(data) {
+	    			
+	    			// There were some errors...
+	    			if (data.result == 'failure')
+	    			{
+		    			$.each(data.errors, function (item, error) {
+		    			
+		    				el = $('<div />');
+		    				el.addClass('error');
+		    				el.html(error);
+		    				
+		    				// Add error message
+		    				$('#' + item).addClass('error').after(el);
+		    			});
+		    		}
+		    		// There were no errors, GREAT SUCCESS!
+		    		else
+		    		{
+		    			$('#comments').load(location.href + ' #comments > *');
+		    		}
+	    			
+	    			// Enable submit button
+	    			$(form).find('input[type="submit"]').attr('disabled', false);
+	    			
+	    		}, 'json');
+	    	});
+	    	
+	    	// Delete Comment
+	    	$('button.delete').live('click', function() {
+	    		
+	    		var answer = confirm('Are you sure you want to delete this comment (and all child comments)?');
+	    		
+	    		if (answer) {
+	    			
+	    			var id = $(this).closest('div').attr('id').replace('comment_id_', '');
+	    			
+	    			var url = BASE_URL + 'hierarchy_demo/delete/' + id;
+	    			
+	    			$.get(url, function() {
+	    				$('#comments').load(location.href + ' #comments > *');
+	    			});
+	    		}
 	    		
 	    	});
 	    	
@@ -236,32 +333,32 @@
 <h1>My Comments</h1>
 <?php echo $comments; ?>
 
-<form method="post" action="<?php echo site_url('hierarchy_demo/add_comment'); ?>" id="add_comment">
+<form method="post" accept-charset="utf-8" action="<?php echo site_url('hierarchy_demo/add_comment'); ?>" id="add_comment">
 	<fieldset>
 		<h2>Comment:</h2>
 		<div>
-			<label for="name">Name:</label>
-			<input type="text" name="name" id="name" />
+			<p>
+				Please enter your comment below.
+				Asterisks (<em class="req">*</em>) designate a required field.
+			</p>
 		</div>
 		<div>
-			<label for="url">URL:</label>
-			<input type="text" name="url" id="url" />
+			<label for="author">Name<em class="req">*</em>:</label><input type="text" name="author" id="author" />
 		</div>
 		<div>
-			<label for="email">Email:</label>
-			<input type="text" name="email" id="email" />
+			<label for="url">URL:</label><input type="text" name="url" id="url" />
 		</div>
 		<div>
-			<label for="title">Title:</label>
-			<input type="text" name="title" id="title" />
+			<label for="email">Email (not published)<em class="req">*</em>:</label><input type="text" name="email" id="email" />
 		</div>
 		<div>
-			<label for="comment">Comment:</label>
-			<textarea name="comment" id="comment"></textarea>
+			<label for="title">Title<em class="req">*</em>:</label><input type="text" name="title" id="title" />
 		</div>
 		<div>
-			<input type="hidden" name="parent_id" id="parent_id" value="" />
-			<input type="submit" value="Submit Comment" />
+			<label for="comment">Comment<em class="req">*</em>:</label><textarea name="comment" id="comment"></textarea>
+		</div>
+		<div>
+			<input type="hidden" name="parent_id" id="parent_id" value="" /><input type="submit" value="Submit Comment" />
 		</div>
 	</fieldset>
 </form>

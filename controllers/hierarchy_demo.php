@@ -1,7 +1,9 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 class Hierarchy_demo extends CI_Controller {
-
+	
+	public $comment_config;
+	
 	function __construct()
 	{
 		parent::__construct();
@@ -11,21 +13,26 @@ class Hierarchy_demo extends CI_Controller {
 		
 		// Load libraries
 		$this->load->library('hierarchy');
+		$this->load->library('form_validation');
 		
 		// Load helpers
 		$this->load->helper('url');
 	}
 
 	function index()
-	{
-		$menu = new $this->hierarchy;
+	{		 
+		$menu = new $this->hierarchy;		
 		$comments = new $this->hierarchy;
 		
-		// Generage menu
+		//$extra_data = $menu->items_array;
+		
+		// Generate menu
 		$data['menu'] = $menu
 			->table('menu')
 			->order_by('hierarchy_order')
-			->generate_hierarchial_list('hierarchy_template', 'ul', 'id="menu"');
+			->get_items_array()
+			->extra_data(array('elements' => $menu->items_array))
+			->generate_hierarchial_list('hierarchy_menu_template', 'ul', 'id="menu"');
 		
 		$data['comments'] = $comments
 			->table('comments')
@@ -62,9 +69,12 @@ class Hierarchy_demo extends CI_Controller {
 		$this->hierarchy_model->shift_left($hierarchy_id);
 	}
 	
-	function new_parent($hierarchy_id, $parent_id)
+	function new_parent($table, $hierarchy_id)
 	{
-		$this->hierarchy_model->new_parent($hierarchy_id, $parent_id);
+		$parent_id = $this->input->post('parent_id');
+		$this->hierarchy
+				->table($table)
+				->new_parent($hierarchy_id, $parent_id);
 	}
 	
 	function new_order($hierarchy_id, $new_order)
@@ -86,28 +96,131 @@ class Hierarchy_demo extends CI_Controller {
 		echo $this->hierarchy_model->test($test);
 	}
 	
-	function delete($hierarchy_id, $delete_children = FALSE)
+	function delete($hierarchy_id, $delete_children = TRUE)
 	{
 		$this->hierarchy_model->delete_item($hierarchy_id, $delete_children);
 	}
 	
+	function valid_url($url)
+	{
+		// If this field has a value
+		if ( $url )
+		{
+			if (filter_var($url, FILTER_VALIDATE_URL))
+			{
+				return TRUE;
+			}
+			else
+			{
+				
+				$this->form_validation->set_message('valid_url', 'Invalid %s');
+				return FALSE;
+			}
+		}
+		else
+		{
+			return TRUE;
+		}
+	}
+	
 	function add_comment()
 	{
-		$data = array(
-			'parent_id' => $this->input->post('parent_id') ? $this->input->post('parent_id') : NULL,
-			'title' 	=> htmlentities($this->input->post('title')),
-			'comment' 	=> htmlentities($this->input->post('comment')),
-			'author' 	=> htmlentities($this->input->post('name')),
-			'email' 	=> htmlentities($this->input->post('email')),
-			'url' 		=> htmlentities($this->input->post('url')),
-			'timestamp' => time()
+		if ( ! $_POST)
+		{
+			redirect('hierarchy_demo');
+		}
+		
+		// Form validation rules
+		$this->comment_config = array(
+			array(
+				'field' => 'title',
+				'label' => 'Title',
+				'rules' => 'trim|required'
+			),
+			array(
+				'field' => 'comment',
+				'label' => 'Comment',
+				'rules' => 'trim|required|min_length[10]'
+			),
+			array(
+				'field' => 'author',
+				'label' => 'Name',
+				'rules' => 'trim|required'
+			),
+			array(
+				'field' => 'email',
+				'label' => 'Email',
+				'rules' => 'trim|required|valid_email'
+			),
+			array(
+				'field' => 'url',
+				'label' => 'URL',
+				'rules' => 'trim|prep_url|callback_valid_url'
+			)
 		);
 		
-		$this->hierarchy
-			->table('comments')
-			->add_item($data);
+		$this->form_validation->set_rules($this->comment_config);
+		
+		// If form validation was successful
+		if ($this->form_validation->run())
+		{
 			
-		redirect('hierarchy_demo');
+			$data = array(
+				'parent_id' => $this->input->post('parent_id') ? $this->input->post('parent_id') : NULL,
+				'title' 	=> $this->input->post('title'),
+				'comment' 	=> $this->input->post('comment'),
+				'author' 	=> $this->input->post('author'),
+				'email' 	=> $this->input->post('email'),
+				'url' 		=> $this->input->post('url'),
+				'timestamp' => time()
+			);
+			
+			// Add comment
+			$this->hierarchy
+				->table('comments')
+				->add_item($data);
+					
+			// If this is an AJAX request
+			if ($this->input->is_ajax_request())
+			{
+				echo json_encode(array('result', 'success'));
+			}
+			
+			// If this is not an AJAX request
+			else
+			{
+				redirect('hierarchy_demo#comment_id_' . $this->db->insert_id);
+			}
+		}
+		
+		// If page was not POSTed to or form validation failed
+		else
+		{
+			// If this is an AJAX request
+			if ($this->input->is_ajax_request())
+			{
+				$data = array(
+					'result' => 'failure',
+					'errors' => $this->form_validation->_error_array
+				);
+				
+				// Set headers
+				$this->output->set_header('Cache-Control: no-cache, must-revalidate');
+				$this->output->set_header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+				$this->output->set_header('Content-type: application/json');
+				
+				// Echo out JSON error messages
+				echo json_encode($data);
+			}
+			// This is not an AJAX request
+			else
+			{
+				// Show error messages
+				echo validation_errors();
+			}
+		}
+
+		
 	}
 }
 

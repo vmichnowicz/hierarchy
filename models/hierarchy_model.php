@@ -217,20 +217,7 @@ class Hierarchy_model extends CI_Model {
 		// If we want to set an order
 		if ($this->hierarchy->is_ordered)
 		{
-			$query = $this->db->query("
-				SELECT *
-				FROM hierarchy as h, {$this->hierarchy->table} as j
-				WHERE
-					parent_id = {$data['parent_id']} AND
-					h.hierarchy_id = j.hierarchy_id
-				ORDER BY hierarchy_order DESC
-				LIMIT 1
-			");
-				
-			$row = $query->row(); 
-			
-			// Get highest order and add one
-			$data['hierarchy_order'] = $row->hierarchy_order + 1;
+			$data['hierarchy_order'] = $this->next_order($data['parent_id']);
 		}
 		
 		// Insert Item into hierarchy table
@@ -508,11 +495,24 @@ class Hierarchy_model extends CI_Model {
 				->update('hierarchy', $data);
 		}
 		
-		// Update main element
+		// If we want to set an order
+		if ($this->hierarchy->is_ordered)
+		{
+			$data = array(
+				'hierarchy_order' => $this->next_order($parent_id)
+			);
+
+			// Update table
+			$this->db
+				->where('hierarchy_id', $hierarchy_id)
+				->update($this->hierarchy->table, $data);
+		}
+		
 		$data = array(
 			'parent_id' => $parent_id ? $parent_id : NULL
 		);
-		
+
+		// Update main hierarchy element
 		$this->db
 			->where('hierarchy_id', $hierarchy_id)
 			->update('hierarchy', $data);
@@ -605,7 +605,7 @@ class Hierarchy_model extends CI_Model {
 			$parent_id = $row->parent_id;
 			$current_order = $row->hierarchy_order;
 			
-			// Get all items with the same parent ID that have an order between 
+			// Get all items with the same parent ID that have an order between the current and new order
 			$orders = $this->db->query("
 				SELECT *
 				FROM hierarchy as h, {$this->hierarchy->table} as j
@@ -671,6 +671,31 @@ class Hierarchy_model extends CI_Model {
 						->update($this->hierarchy->table, array('hierarchy_order' => $key));
 				}
 			}
+		}
+	}
+
+	/*
+	 * Get the next order for an element
+	 *
+	 * If we have items with orders 1,2, and 3 - this will return 4
+	 * 
+	 */
+	public function next_order($hierarchy_id)
+	{
+		$query = $this->db->query("
+			SELECT *
+			FROM hierarchy as h, {$this->hierarchy->table} as j
+			WHERE
+				parent_id = $hierarchy_id AND
+				h.hierarchy_id = j.hierarchy_id
+			ORDER BY hierarchy_order DESC
+			LIMIT 1
+		");
+
+		if ($query->num_rows() > 0)
+		{
+			$row = $query->row();
+			return $row->hierarchy_order + 1;
 		}
 	}
 	

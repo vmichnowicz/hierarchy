@@ -9,7 +9,7 @@
 *
 * Description: Get your hierarchy on
 *
-* Requirements: CodeIgniter 2(?), PHP 5, and MySQL with InnoDB support
+* Requirements: CodeIgniter 2, PHP 5, and MySQL with InnoDB support
 *
 */
 
@@ -23,6 +23,8 @@ class Hierarchy
 	
 	public $order_by = 'lineage';
 	public $order_by_order = 'ASC';
+	
+	public $extra_data = array();
 	
 	public $items_array;
 	public $hierarchial_items_array;
@@ -75,8 +77,8 @@ class Hierarchy
 		$this->extras = $this->CI->config->item('hierarchy_' . $table);
 		
 		// Is this table ordered? (look for "hierarchy_order")
-		$this->is_ordered = in_array('hierarchy_order', $this->extras);
-		
+		$this->is_ordered = in_array('hierarchy_order', $this->extras);	
+
 		return $this;
 	}
 	
@@ -109,6 +111,26 @@ class Hierarchy
 	function order_by($order_by)
 	{
 		$this->order_by = $order_by;
+		
+		return $this;
+	}
+	
+	/**
+	 * Add some extra data to each hierarchy item
+	 * 
+	 * This comes in handy if you want to, for example, display a select list
+	 * along with each hierarchy item. You can pass your select options along as
+	 * an extra data array. Then you can access this data in your view template.
+	 * 
+	 * @access public
+	 * 
+	 * @param array		Array of extra data
+	 * 
+	 * @return object
+	 */
+	function extra_data($data)
+	{
+		$this->extra_data = array_merge($this->extra_data, $data);
 		
 		return $this;
 	}
@@ -214,7 +236,7 @@ class Hierarchy
 		
 		foreach ($list as $item)
 		{	
-			$out .= '<li>' . $this->CI->parser->parse($template, $item['root'], TRUE);
+			$out .= '<li>' . $this->CI->parser->parse($template, $item['root'] + $this->extra_data, TRUE);
 			
 			if ( isset($item['children']) )
 			{
