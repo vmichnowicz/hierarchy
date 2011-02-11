@@ -45,9 +45,7 @@ class Hierarchy
 	 * __call
 	 *
 	 * If the method can not be found here, look in hierarchy_model
-	 * 
 	 * I love magic (methods)
-	 *
 	 **/
 	public function __call($method, $arguments)
 	{
@@ -63,9 +61,7 @@ class Hierarchy
 	 * Set table used for extra data
 	 * 
 	 * @access public
-	 * 
 	 * @param string		Name of table
-	 * 
 	 * @return object
 	 */
 	public function table($table)
@@ -86,9 +82,7 @@ class Hierarchy
 	 * Set template
 	 * 
 	 * @access public
-	 * 
 	 * @param string		Name of template file (located in views folder)
-	 * 
 	 * @return object
 	 */
 	public function template($template = NULL)
@@ -103,9 +97,7 @@ class Hierarchy
 	 * Set order by
 	 * 
 	 * @access public
-	 * 
 	 * @param string		Name of row to order by
-	 * 
 	 * @return object
 	 */
 	function order_by($order_by)
@@ -123,9 +115,7 @@ class Hierarchy
 	 * an extra data array. Then you can access this data in your view template.
 	 * 
 	 * @access public
-	 * 
 	 * @param array		Array of extra data
-	 * 
 	 * @return object
 	 */
 	function extra_data($data)
@@ -139,14 +129,12 @@ class Hierarchy
 	 * Set order by order
 	 * 
 	 * @access public
-	 * 
 	 * @param string		Order ASC or DESC
-	 * 
 	 * @return object
 	 */
 	function order_by_order($order_by_order)
 	{
-		$this->order_by_order = ( strtolower($order_by_order) == 'asc' || strtolower($order_by_order) == 'desc' ) ? strtoupper($order_by_order) : 'ASC'; 
+		$this->order_by_order = ( strtolower($order_by_order) == 'asc' || strtolower($order_by_order) == 'desc' || strtolower($order_by_order) == 'random' ) ? strtoupper($order_by_order) : 'ASC';
 	
 		return $this;
 	}
@@ -154,11 +142,9 @@ class Hierarchy
 	/**
 	 * Get array of all items
 	 * 
-	 * @access public
-	 * 
+	 * @access public 
 	 * @param string		Name of row to order by
 	 * @param string 		Order ASC or DESC
-	 * 
 	 * @return object
 	 */
 	public function get_items_array()
@@ -172,10 +158,8 @@ class Hierarchy
 	 * Get multi-dimensional array of all items
 	 * 
 	 * @access public
-	 * 
 	 * @param string		Name of row to order by
 	 * @param string 		Order ASC or DESC
-	 * 
 	 * @return object
 	 */
 	public function get_hierarchical_items_array()
@@ -194,11 +178,9 @@ class Hierarchy
 	 * Generate HTML list
 	 * 
 	 * @access public
-	 * 
 	 * @param string		Template name (stored in "views" folder)
 	 * @param string 		List type ("ul" or "li")
 	 * @param string 		List attributes (add in extra JS, an ID, or some CSS)
-	 * 
 	 * @return string
 	 */
 	public function generate_hierarchial_list($template = NULL, $type = 'ul', $attributes = '')
@@ -223,11 +205,9 @@ class Hierarchy
 	 * Generate HTML list
 	 * 
 	 * @access private
-	 * 
 	 * @param string		Generate HTML list (recursive fun)
 	 * @param string 		List type ("ul" or "li")
 	 * @param string 		List array
-	 * 
 	 * @return string
 	 */
 	private function _list($type, $template, $list, $attributes)
@@ -249,6 +229,140 @@ class Hierarchy
 		$out .= '</' . $type . '>';
 		
 		return $out;
+	}
+
+	/**
+	 * Add item
+	 *
+	 * @access public
+	 * @param array			Array containing parent ID and other data in extra_data array
+	 * @return null
+	 */
+	public function add_item($data)
+	{
+		$this->CI->hierarchy_model->add_item($data, $this->table, $this->is_ordered);
+	}
+
+	/**
+	 * Shift an element left
+	 *
+	 * @access public
+	 * @param int			Hierarchy ID
+	 * @return null
+	 */
+	public function shift_left($hierarchy_id)
+	{
+		return $this->CI->hierarchy_model->shift_left($hierarchy_id, $this->table, $this->is_ordered);
+	}
+
+	/**
+	 * Given an item a new parent
+	 *
+	 * @access public
+	 * @param int			Hierarchy ID of item that we are moving
+	 * @param int			Hierarchy ID of new parent
+	 * @return null
+	 */
+	public function new_parent($hierarchy_id, $parent_id)
+	{
+		// If our parent ID is an empty string
+		$parent_id = $parent_id ? $parent_id : NULL;
+
+		$this->CI->hierarchy_model->new_parent($hierarchy_id, $parent_id, $this->table, $this->is_ordered);
+	}
+
+	/**
+	 * Reorder all elements
+	 *
+	 * @access public
+	 * @param string		Column to order by
+	 * @param sring			ASC or DESC
+	 * @return null
+	 */
+	public function reorder()
+	{
+		$this->CI->hierarchy_model->reorder($this->order_by, $this->order_by_order, $this->table);
+	}
+
+	/**
+	 * Given an item a new order
+	 *
+	 * @access public
+	 * @param int			Hierarchy ID of item that we are reordering
+	 * @param int			New order
+	 * @return bool
+	 */
+	public function new_order($hierarchy_id, $new_order)
+	{
+		// We can only order items that have a hierarchy_order column
+		if ($this->is_ordered)
+		{
+			return $this->CI->hierarchy_model->new_order($hierarchy_id, $new_order, $this->table);
+		}
+		else
+		{
+			return FALSE;
+		}
+	}
+
+	/**
+	 * Increase an items order (e.g. from 5 to 6)
+	 *
+	 * @access public
+	 * @param int			Hierarchy ID of item that we are moving
+	 * @param int			Hierarchy ID of new parent
+	 * @return bool
+	 */
+	public function order_increase($hierarchy_id)
+	{
+		$item = $this->CI->hierarchy_model->item_exists($hierarchy_id, $this->table);
+
+		if ($item)
+		{
+			$current_order = $item['hierarchy_order'];
+			$next_order = $this->CI->hierarchy_model->next_order($current_order, $item['parent_id'], $this->table);
+
+			if ($next_order)
+			{
+				$this->new_order($hierarchy_id, $next_order);
+			}
+			// If we are on the last element, make it the first
+			else
+			{
+				$this->new_order($hierarchy_id, 0);
+			}
+		}
+	}
+
+	/**
+	 * Decrease an items order (e.g. from 6 to 5)
+	 *
+	 * @access public
+	 * @param int			Hierarchy ID of item that we are moving
+	 * @param int			Hierarchy ID of new parent
+	 * @return null
+	 */
+	public function order_decrease($hierarchy_id)
+	{
+		$item = $this->CI->hierarchy_model->item_exists($hierarchy_id, $this->table);
+
+		if ($item)
+		{
+			$current_order = $item['hierarchy_order'];
+			$prev_order = $this->CI->hierarchy_model->prev_order($current_order, $item['parent_id'], $this->table);
+
+			// Our previous order could be 0...
+			if ($prev_order !== FALSE)
+			{
+				$this->new_order($hierarchy_id, $prev_order);
+			}
+			// If we are at the first element, move it to the bottom
+			else
+			{
+				$highest_order = $this->CI->hierarchy_model->highest_order($item['parent_id'], $this->table);
+				$this->new_order($hierarchy_id, $highest_order);
+			}
+		}
 	}
 	
 }

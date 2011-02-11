@@ -13,7 +13,8 @@
 		</cite>
 	</blockquote>
 
-	<button class="reply">Reply</button>
-	<button class="delete">Delete</button>
-	<em class="details">(id: {hierarchy_id}, num children: {num_children})</em>
+	<a href="<?php echo site_url('comments/reply/' . $hierarchy_id); ?>" class="reply button">Reply</a>
+	<a href="<?php echo site_url('comments/delete/' . $hierarchy_id); ?>" class="delete button">Delete</a>
+
+	<em class="details">(id: {hierarchy_id}, level: {deep}, num children: {num_children})</em>
 </div>
