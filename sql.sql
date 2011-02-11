@@ -19,11 +19,16 @@ CREATE TABLE IF NOT EXISTS `comments` (
   `timestamp` int(32) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   KEY `hierarchy_id` (`hierarchy_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4 ;
 
 --
 -- Dumping data for table `comments`
 --
+
+INSERT INTO `comments` (`id`, `hierarchy_id`, `title`, `comment`, `author`, `email`, `url`, `timestamp`) VALUES
+(1, 27, 'Soccer', 'Soccer is called football in some places.', 'Sue', 'sue@suessoccerballs.com', 'http://suessoccerballs.com', 1297357717),
+(2, 28, 'Interesting', 'This is quite interesting.', 'Martha', 'martha@marthasmarinade.com', 'http://marthasmarinade.com', 1297357857),
+(3, 29, 'No', 'No, it is not interesting.', 'Gary', 'gary@garysgadgets.com', 'http://garysgadgets.com', 1297357904);
 
 -- --------------------------------------------------------
 
@@ -38,7 +43,7 @@ CREATE TABLE IF NOT EXISTS `hierarchy` (
   `deep` smallint(8) unsigned NOT NULL,
   PRIMARY KEY (`hierarchy_id`),
   KEY `parent_id` (`parent_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=27 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=46 ;
 
 --
 -- Dumping data for table `hierarchy`
@@ -70,7 +75,10 @@ INSERT INTO `hierarchy` (`hierarchy_id`, `parent_id`, `lineage`, `deep`) VALUES
 (23, 18, '17-18-23', 2),
 (24, NULL, '24', 0),
 (25, 24, '24-25', 1),
-(26, 24, '24-26', 1);
+(26, 24, '24-26', 1),
+(27, NULL, '27', 0),
+(28, 27, '27-28', 1),
+(29, 28, '27-28-29', 2);
 
 -- --------------------------------------------------------
 
@@ -86,39 +94,39 @@ CREATE TABLE IF NOT EXISTS `menu` (
   `url` varchar(128) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `hierarchy_id` (`hierarchy_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=48 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=59 ;
 
 --
 -- Dumping data for table `menu`
 --
 
-INSERT INTO `menu` (`id`, `hierarchy_id`, `title`, `url`) VALUES
-(1, 1, 'Home', 'home'),
-(2, 2, 'About', 'about'),
-(3, 3, 'Company', 'about/company'),
-(5, 4, 'History', 'about/company/history'),
-(7, 5, 'The Beginning', 'about/company/history/the_beginning'),
-(9, 6, 'The Middle', 'about/company/history/the_middle'),
-(11, 7, 'Now', 'about/company/history/now'),
-(13, 8, 'People', 'about/company/people'),
-(15, 9, 'Management', 'about/company/people/management'),
-(17, 10, 'Staff', 'about/company/people/staff'),
-(19, 11, 'Affiliates', 'about/affiliates'),
-(21, 12, 'Members', 'about/affiliates/members'),
-(23, 13, 'Become a Member', 'about/affiliates/become_a_member'),
-(25, 14, 'Gary&rsquo;s Gadgets', 'about/affiliates/members/garys_gadgets'),
-(27, 15, 'Martha&rsquo;s Marinade', 'about/affiliates/members/marthas_marinade'),
-(30, 16, 'Sue&rsquo;s Soccer Balls', 'about/affiliates/members/sues_soccer_balls'),
-(31, 17, 'Stores', 'stores'),
-(32, 18, 'Locations', 'stores/locations'),
-(33, 19, 'Find a Store', 'stores/find_a_store'),
-(35, 20, 'Franchise Opportunities', 'stores/franchise_opportunities'),
-(37, 21, 'USA', 'stores/locations/usa'),
-(39, 22, 'Europe', 'stores/locations/europe'),
-(41, 23, 'North Pole', 'stores/locations/north_pole'),
-(43, 24, 'Contact', 'contact'),
-(44, 25, 'Sales', 'contact/sales'),
-(46, 26, 'Customer Relations', 'contact/customer_relations');
+INSERT INTO `menu` (`id`, `hierarchy_id`, `hierarchy_order`, `title`, `url`) VALUES
+(1, 1, 2, 'Home', 'home'),
+(2, 2, 0, 'About', 'about'),
+(3, 3, 1, 'Company', 'about/company'),
+(5, 4, 0, 'History', 'about/company/history'),
+(7, 5, 1, 'The Beginning', 'about/company/history/the_beginning'),
+(9, 6, 2, 'The Middle', 'about/company/history/the_middle'),
+(11, 7, 0, 'Now', 'about/company/history/now'),
+(13, 8, 1, 'People', 'about/company/people'),
+(15, 9, 0, 'Management', 'about/company/people/management'),
+(17, 10, 1, 'Staff', 'about/company/people/staff'),
+(19, 11, 0, 'Affiliates', 'about/affiliates'),
+(21, 12, 1, 'Members', 'about/affiliates/members'),
+(23, 13, 0, 'Become a Member', 'about/affiliates/become_a_member'),
+(25, 14, 0, 'Gary’s Gadgets', 'about/affiliates/members/garys_gadgets'),
+(27, 15, 1, 'Martha’s Marinade', 'about/affiliates/members/marthas_marinade'),
+(30, 16, 2, 'Sue’s Soccer Balls', 'about/affiliates/members/sues_soccer_balls'),
+(31, 17, 3, 'Stores', 'stores'),
+(32, 18, 2, 'Locations', 'stores/locations'),
+(33, 19, 0, 'Find a Store', 'stores/find_a_store'),
+(35, 20, 1, 'Franchise Opportunities', 'stores/franchise_opportunities'),
+(37, 21, 2, 'USA', 'stores/locations/usa'),
+(39, 22, 0, 'Europe', 'stores/locations/europe'),
+(41, 23, 1, 'North Pole', 'stores/locations/north_pole'),
+(43, 24, 1, 'Contact', 'contact'),
+(44, 25, 1, 'Sales', 'contact/sales'),
+(46, 26, 0, 'Customer Relations', 'contact/customer_relations');
 
 --
 -- Constraints for dumped tables
