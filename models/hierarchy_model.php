@@ -2,13 +2,6 @@
 
 class Hierarchy_model extends CI_Model {
 
-	public $items_array = NULL;
-
-	public function __construct()
-	{
-		$this->config->load('hierarchy_config');
-	}
-
 	/**
 	 * Get all items from a provided table and generate an array
 	 *
@@ -48,7 +41,7 @@ class Hierarchy_model extends CI_Model {
 					$items_array[$row->hierarchy_id] = array(
 						'hierarchy_id' 	=> $row->hierarchy_id,
 						'deep' 			=> $row->deep,
-						'lineage' 		=> $row->lineage ? explode('-', $row->lineage) : NULL,
+						'lineage' 		=> explode('-', $row->lineage),
 						'parent_id' 	=> $row->parent_id ? $row->parent_id : NULL,
 						'num_children' 	=> $row->num_children,
 						'surrogate_id' 	=> $counter
@@ -95,9 +88,7 @@ class Hierarchy_model extends CI_Model {
 	 * Get all items from a provided table and generate multi-dimensional array
 	 *
 	 * @access public
-	 * @param string		Name of table
-	 * @param string		Name of row to order by
-	 * @param string		Order ASC or DESC
+	 * @param array			Array of items
 	 * @return array
 	 */
 	public function get_hierarchical_items_array($items_array)
@@ -116,12 +107,10 @@ class Hierarchy_model extends CI_Model {
 
 				if ($lineage != $item['hierarchy_id'])
 				{
-					//$eval .= '[' . $lineage . ']' . '["children"]';
 					$eval .= '[' . $items_array[$lineage]['surrogate_id'] . ']' . '["children"]';
 				}
 				else
 				{
-					//$eval .= '[' . $lineage . ']' . '["root"]';
 					$eval .= '[' . $items_array[$lineage]['surrogate_id'] . ']' . '["root"]';
 				}
 
@@ -145,6 +134,7 @@ class Hierarchy_model extends CI_Model {
 	 *
 	 * @access public
 	 * @param int			Item ID
+	 * @param string		Table name (optional)
 	 * @return mixed
 	 */
 	public function item_exists($hierarchy_id, $table = NULL)
@@ -162,7 +152,7 @@ class Hierarchy_model extends CI_Model {
 			{
 				$row = $query->row();
 
-				// Get all data from query and place it in data array (we only have one result)
+				// Get all data from query and place it in data array
 				$data = $query->row_array();
 
 				// Make our lineage an array
@@ -209,8 +199,9 @@ class Hierarchy_model extends CI_Model {
 	 * Add a hierarchy item
 	 *
 	 * @access public
+	 * @param array			Item data
 	 * @param string		Extra table name
-	 * @param array			Extra data
+	 * @param bool			Is this table ordered?
 	 * @return bool
 	 */
 	public function add_item($data, $table, $is_ordered)
@@ -238,7 +229,7 @@ class Hierarchy_model extends CI_Model {
 			$data['hierarchy_order'] = $this->highest_order($data['parent_id'], $table) + 1;
 		}
 
-		// Insert Item into hierarchy table
+		// Insert item into hierarchy table
 		$this->db->insert('hierarchy', array('parent_id' => $data['parent_id']));
 
 		// Get insert ID
@@ -316,6 +307,7 @@ class Hierarchy_model extends CI_Model {
 
 			$query = $this->db
 				->where('lineage LIKE', $lineage . '-%')
+				->order_by('parent_id', 'DESC') // Foreign key constraints strike again
 				->order_by('hierarchy_id', 'DESC') // Foreign key constraints strike again
 				->get('hierarchy');
 
@@ -396,6 +388,8 @@ class Hierarchy_model extends CI_Model {
 	 *
 	 * @access public
 	 * @param int			Item ID
+	 * @param string		Table name
+	 * @param bool			Is this table ordered?
 	 * @return bool
 	 */
 	public function shift_left($hierarchy_id, $table, $is_ordered)
@@ -457,7 +451,7 @@ class Hierarchy_model extends CI_Model {
 
 				$new_lineage = implode('-', $lineage_array);
 
-				// maybe just: $row->deep - 1 ??
+				// maybe just $row->deep - 1 ?
 				$new_deep = (count($lineage_array) > 1) ? $row->deep - 1 : 0;
 
 				$new_data = array(

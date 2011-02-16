@@ -133,10 +133,10 @@
 
 <div id="breadcrumbs">
 	<a href="<?php echo site_url(); ?>">Main</a> &raquo;
-	Hierarchical Comments
+	Hierarchical &ldquo;threaded&rdquo; Comments
 </div>
 
-<h2>Hierarchical Comments</h2>
+<h2>Hierarchical &ldquo;threaded&rdquo; Comments</h2>
 
 <p>
 	Comments are <strong>not moderated</strong>.
@@ -150,7 +150,7 @@
 
 <form method="post" class="add" accept-charset="utf-8" action="<?php echo site_url('comments/add'); ?>" id="add_comment">
 	<fieldset>
-		<h2>Comment<?php echo isset($reply_to) ? ' in reply to: ' . $reply_to['title'] : NULL; ?>:</h2>
+		<h2>Comment<?php echo $reply_to ? ' in reply to: <em>' . $reply_to['title'] . '</em>' : NULL; ?></h2>
 		<div>
 			<p>
 				Please enter your comment below.
@@ -170,13 +170,19 @@
 			<label for="title">Title<em class="req">*</em>:</label><input type="text" name="title" id="title" />
 		</div>
 		<div>
-			<label for="comment">Comment<em class="req">*</em>:</label><textarea name="comment" id="comment"></textarea>
+			<label for="comment">Comment<em class="req">*</em>:</label><textarea name="comment" id="comment" rows="10" cols="50"></textarea>
 		</div>
 		<div>
-			<input type="hidden" name="parent_id" id="parent_id" value="" /><input type="submit" value="Submit Comment" />
+			<input type="hidden" name="parent_id" id="parent_id" value="<?php echo $reply_to ? $reply_to['hierarchy_id'] : NULL; ?>" /><input type="submit" value="Submit Comment" />
 		</div>
 	</fieldset>
 </form>
+
+<div clas="clear"></div>
+
+<div id="footer">
+	<a href="https://github.com/vmichnowicz/hierarchy">Download Source Code on Github</a>
+</div>
 
 </body>
 </html>

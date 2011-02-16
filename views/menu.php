@@ -25,14 +25,18 @@
 
 			// Delete an item
 			$('a.delete').live('click', function(e) {
+
 				e.preventDefault();
+				$('body').addClass('waiting');
 
 				var answer = confirm('Are you sure you want to delete this menu item (and all child elements)?');
 
 				if (answer) {
 					var url = $(this).attr('href');
 					$.get(url, function() {
-						$('#menu').load(location.href + ' #menu > *');
+						$('#menu').load(location.href + ' #menu > *', function() {
+							$('body').removeClass('waiting');
+						});
 					});
 				}
 			});
@@ -49,6 +53,7 @@
 			$('#menu form').live('submit', function(e) {
 				
 				e.preventDefault();
+				$('body').addClass('waiting');
 
 				var action = $(this).attr('action');
 				var id = $(this).closest('div').attr('id');
@@ -56,7 +61,9 @@
 				// post it..
 				$.post(action, $(this).serialize(), function() {
 					
-					$('#menu').load(location.href + ' #menu > *');
+					$('#menu').load(location.href + ' #menu > *', function() {
+						$('body').removeClass('waiting');
+					});
 
 				});
 				
@@ -66,6 +73,7 @@
 			$('#add_menu_item').live('submit', function(e) {
 
 				e.preventDefault();
+				$('body').addClass('waiting');
 
 				// Clear error messages
 				$('div.error').remove();
@@ -82,6 +90,8 @@
 					// There were some errors...
 					if (data.result == 'failure')
 					{
+						$('body').removeClass('waiting');
+
 						$.each(data.errors, function (item, error) {
 
 							el = $('<div />');
@@ -101,7 +111,9 @@
 						// Reset form
 						$(form)[0].reset();
 
-						$('#menu').load(location.href + ' #menu > *');
+						$('#menu').load(location.href + ' #menu > *', function() {
+							$('body').removeClass('waiting');
+						});
 					}
 
 					// Enable submit button
@@ -112,16 +124,18 @@
 			});
 
 			// Adjust item order
-			$('#order_increase, #order_decrease').live('click', function(e) {
+			$('a.order_increase, a.order_decrease').live('click', function(e) {
 
 				e.preventDefault();
+				$('body').addClass('waiting');
 
 				var url = $(this).attr('href');
 
 				// post it..
 				$.post(url, function() {
-					console.log('posted');
-					$('#menu').load(location.href + ' #menu > *');
+					$('#menu').load(location.href + ' #menu > *', function() {
+						$('body').removeClass('waiting');
+					});
 				});
 
 			});
@@ -135,16 +149,16 @@
 
 <div id="breadcrumbs">
 	<a href="<?php echo site_url(); ?>">Main</a> &raquo;
-	Hierarchical Comments
+	Hierarchical Menu
 </div>
 
-<h2>Hierarchical Comments</h2>
+<h2>Hierarchical Menu</h2>
 
 <p>
 	Menu items are <strong>not moderated</strong>.
 	If, for example, you are offended by menu items titled &ldquo;Victor is the Best,&rdquo; I suggest you delete those items.
 	And if you are still pissed, I suggest deleting all the menu items.
-	With that said, would you care to <a href="#add_item">add a menu item</a>?
+	With that said, would you care to <a href="#add_menu_item">add a menu item</a>?
 </p>
 
 <?php echo $menu; ?>
@@ -162,7 +176,11 @@
 			<label for="parent_id">Parent:</label><select name="parent_id" id="parent_id">
 				<option value="">None</option>
 				<?php foreach ($elements as $el): ?>
-					<option value="<?php echo $el['hierarchy_id']; ?>"><?php echo $el['title']; ?></option>
+					<?php if ($parent['hierarchy_id'] == $el['hierarchy_id']): ?>
+						<option selected="selected" value="<?php echo $el['hierarchy_id']; ?>"><?php echo $el['title']; ?></option>
+					<?php else: ?>
+						<option value="<?php echo $el['hierarchy_id']; ?>"><?php echo $el['title']; ?></option>
+					<?php endif; ?>
 				<?php endforeach; ?>
 			</select>
 		</div>
@@ -182,6 +200,10 @@
 	<a href="<?php echo site_url('menu/reorder/title/asc'); ?>" class="button" title="Alphabetical order">A-Z</a>
 	<a href="<?php echo site_url('menu/reorder/title/desc'); ?>" class="button" title="Reverse alphabetical order">Z-A</a>
 	<a href="<?php echo site_url('menu/reorder/title/random'); ?>" class="button" title="Random order">?</a>
+</div>
+
+<div id="footer">
+	<a href="https://github.com/vmichnowicz/hierarchy">Download Source Code on Github</a>
 </div>
 
 </body>

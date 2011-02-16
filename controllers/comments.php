@@ -2,6 +2,8 @@
 
 class Comments extends CI_Controller {
 
+	public $comments;
+
 	/*
 	 * Construct
 	 */
@@ -12,6 +14,9 @@ class Comments extends CI_Controller {
 		// Load libraries
 		$this->load->library('hierarchy');
 		$this->load->library('form_validation');
+
+		$this->comments = new $this->hierarchy;
+		$this->comments->table('comments');
 	}
 
 	/*
@@ -19,11 +24,10 @@ class Comments extends CI_Controller {
 	 */
 	function index()
 	{
-		$comments = new $this->hierarchy;
-
-		$data['comments'] = $comments
-			->table('comments')
+		$data['comments'] = $this->comments
 			->generate_hierarchial_list('hierarchy_comments_template', 'ul', 'id="comments"');
+
+		$data['reply_to'] = $this->comments->item_exists($this->input->get('reply_to'));
 
 		$this->load->view('comments', $data);
 	}
@@ -52,7 +56,6 @@ class Comments extends CI_Controller {
 	 */
 	function add()
 	{
-
 		if ( ! $_POST)
 		{
 			redirect('hierarchy_demo');
@@ -103,9 +106,7 @@ class Comments extends CI_Controller {
 			);
 
 			// Add comment
-			$this->hierarchy
-				->table('comments')
-				->add_item($data);
+			$this->comments->add_item($data);
 
 			// If this is an AJAX request
 			if ($this->input->is_ajax_request())
@@ -133,7 +134,7 @@ class Comments extends CI_Controller {
 
 				// Set headers
 				$this->output->set_header('Cache-Control: no-cache, must-revalidate');
-				$this->output->set_header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+				$this->output->set_header('Expires: Sat, 1 Jan 2000 12:00:00 GMT');
 				$this->output->set_header('Content-type: application/json');
 
 				// Echo out JSON error messages
@@ -158,13 +159,13 @@ class Comments extends CI_Controller {
 	 */
 	function delete($hierarchy_id, $delete_children = TRUE)
 	{
-		$this->hierarchy_model->delete_item($hierarchy_id, $delete_children);
+		$this->comments->delete_item($hierarchy_id, $delete_children);
 	}
 
 	/*
 	 * Validate a URL
 	 *
-	 * @param string		URL
+	 * @param string	URL
 	 * @return bool
 	 */
 	function valid_url($url)

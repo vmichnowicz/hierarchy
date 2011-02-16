@@ -16,5 +16,9 @@
 	<li><a href="<?php echo site_url('menu'); ?>">Hierarchical Menu</a></li>
 </ul>
 
+<div id="footer">
+	<a href="https://github.com/vmichnowicz/hierarchy">Download Source Code on Github</a>
+</div>
+
 </body>
 </html>

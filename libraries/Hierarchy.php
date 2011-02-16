@@ -103,7 +103,6 @@ class Hierarchy
 	function order_by($order_by)
 	{
 		$this->order_by = $order_by;
-		
 		return $this;
 	}
 	
@@ -121,7 +120,6 @@ class Hierarchy
 	function extra_data($data)
 	{
 		$this->extra_data = array_merge($this->extra_data, $data);
-		
 		return $this;
 	}
 	
@@ -135,22 +133,18 @@ class Hierarchy
 	function order_by_order($order_by_order)
 	{
 		$this->order_by_order = ( strtolower($order_by_order) == 'asc' || strtolower($order_by_order) == 'desc' || strtolower($order_by_order) == 'random' ) ? strtoupper($order_by_order) : 'ASC';
-	
 		return $this;
 	}
 	
 	/**
 	 * Get array of all items
 	 * 
-	 * @access public 
-	 * @param string		Name of row to order by
-	 * @param string 		Order ASC or DESC
+	 * @access public
 	 * @return object
 	 */
 	public function get_items_array()
 	{
 		$this->items_array = $this->CI->hierarchy_model->get_items_array($this->table, $this->order_by, $this->order_by_order);
-		
 		return $this;
 	}
 	
@@ -158,8 +152,6 @@ class Hierarchy
 	 * Get multi-dimensional array of all items
 	 * 
 	 * @access public
-	 * @param string		Name of row to order by
-	 * @param string 		Order ASC or DESC
 	 * @return object
 	 */
 	public function get_hierarchical_items_array()
@@ -170,7 +162,6 @@ class Hierarchy
 		}
 		
 		$this->hierarchial_items_array = $this->CI->hierarchy_model->get_hierarchical_items_array($this->items_array);
-
 		return $this;
 	}
 	
@@ -178,7 +169,7 @@ class Hierarchy
 	 * Generate HTML list
 	 * 
 	 * @access public
-	 * @param string		Template name (stored in "views" folder)
+	 * @param string		Template name (located in "views" folder)
 	 * @param string 		List type ("ul" or "li")
 	 * @param string 		List attributes (add in extra JS, an ID, or some CSS)
 	 * @return string
@@ -205,9 +196,10 @@ class Hierarchy
 	 * Generate HTML list
 	 * 
 	 * @access private
-	 * @param string		Generate HTML list (recursive fun)
 	 * @param string 		List type ("ul" or "li")
-	 * @param string 		List array
+	 * @param string		Template name (located in "views" folder)
+	 * @param array 		List array
+	 * @param string		List attributes (add in extra JS, an ID, or some CSS)
 	 * @return string
 	 */
 	private function _list($type, $template, $list, $attributes)
@@ -229,6 +221,30 @@ class Hierarchy
 		$out .= '</' . $type . '>';
 		
 		return $out;
+	}
+
+	/**
+	 * If an item exists, get its data
+	 *
+	 * @access public
+	 * @param int			Hierarchy ID
+	 * @return null
+	 */
+	public function item_exists($hierarchy_id)
+	{
+		return $this->CI->hierarchy_model->item_exists($hierarchy_id, $this->table);
+	}
+
+	/**
+	 * Return an items lineage (kinda like breadcrumbs)
+	 *
+	 * @access public
+	 * @param int			Hierarchy ID
+	 * @return null
+	 */
+	public function item_lineage($hierarchy_id)
+	{
+		return $this->CI->hierarchy_model->item_lineage($hierarchy_id, $this->table);
 	}
 
 	/**
@@ -310,8 +326,7 @@ class Hierarchy
 	 *
 	 * @access public
 	 * @param int			Hierarchy ID of item that we are moving
-	 * @param int			Hierarchy ID of new parent
-	 * @return bool
+	 * @return null
 	 */
 	public function order_increase($hierarchy_id)
 	{
@@ -339,7 +354,6 @@ class Hierarchy
 	 *
 	 * @access public
 	 * @param int			Hierarchy ID of item that we are moving
-	 * @param int			Hierarchy ID of new parent
 	 * @return null
 	 */
 	public function order_decrease($hierarchy_id)

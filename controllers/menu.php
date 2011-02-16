@@ -13,14 +13,12 @@ class Menu extends CI_Controller {
 		$this->load->library('form_validation');
 
 		// Menu
-		$this->menu = new $this->hierarchy;
+		$this->menu = $this->hierarchy;
 
 		// Menu config
 		$this->menu
-				->table('menu')
-				->order_by('hierarchy_order');
-
-		// $this->output->enable_profiler(TRUE);
+			->table('menu')
+			->order_by('hierarchy_order');
 	}
 
 	function index()
@@ -31,6 +29,9 @@ class Menu extends CI_Controller {
 			->extra_data(array('elements' => $elements = $this->menu->items_array))
 			->generate_hierarchial_list('hierarchy_menu_template', 'ul', 'id="menu"');
 
+		// Grab parent ID (Only needed if user has JavaScript disabled)
+		$data['parent'] = $this->menu->item_exists($this->input->get('parent_id'));
+
 		$this->load->view('menu', $data);
 	}
 
@@ -40,11 +41,8 @@ class Menu extends CI_Controller {
 		$parent_id = $this->input->post('parent_id');
 
 		$this->menu->new_parent($hierarchy_id, $parent_id);
-	}
 
-	function new_order($hierarchy_id, $new_order)
-	{
-		$this->menu->new_order($hierarchy_id, $new_order);
+		redirect('menu#hierarchy_id_' . $hierarchy_id);
 	}
 
 	function reorder($order_by = 'lineage', $order_by_order = 'ASC')
@@ -60,6 +58,51 @@ class Menu extends CI_Controller {
 	function delete($hierarchy_id, $delete_children = TRUE)
 	{
 		$this->menu->delete_item($hierarchy_id, $delete_children);
+	}
+
+	function add_random($num)
+	{
+		$random_words = array('a', 'random', 'hierarchy', 'test', 'and', 'or', 'php', 'mysql', 'php', 'javascript', 'xhtml', 'also', 'with', 'technology', 'master', 'code', 'menu', 'threaded', 'codeigniter');
+		$num = (int)$num;
+
+		for ($i = 0; $i <= $num; $i++)
+		{
+			$title = '';
+
+			$random_length = rand(1, 8);
+			for ($r = 0; $r <= $random_length; $r++)
+			{
+				$title .= ' ' . $random_words[ rand(1, count($random_words)) - 1 ];
+			}
+
+			$url = str_replace(' ', '/', $title);
+			
+			$query = $this->db
+				->join('menu', 'menu.hierarchy_id = hierarchy.hierarchy_id')
+				->order_by('parent_id', 'RANDOM')
+				->limit(1)
+				->get('hierarchy');
+
+			if ($query->num_rows() > 0)
+			{
+				$row = $query->row();
+
+				$parent = $row->hierarchy_id;
+			}
+			else
+			{
+				$parent = NULL;
+			}
+
+			$data = array(
+				'parent_id'		=> $parent,
+				'title'			=> $title,
+				'url'			=> $url
+			);
+
+
+			$this->menu->add_item($data);
+		}
 	}
 
 	function add()
@@ -125,7 +168,7 @@ class Menu extends CI_Controller {
 
 				// Set headers
 				$this->output->set_header('Cache-Control: no-cache, must-revalidate');
-				$this->output->set_header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+				$this->output->set_header('Expires: Sat, 1 Jan 2000 12:00:00 GMT');
 				$this->output->set_header('Content-type: application/json');
 
 				// Echo out JSON error messages
@@ -160,47 +203,18 @@ class Menu extends CI_Controller {
 		}
 	}
 
-	function test()
-	{
-		var_dump($this->menu->is_ordered) . '<br>';
-		echo $this->menu->test();
-	}
-
 	function order_increase($hierarchy_id)
 	{
 		$this->menu->order_increase($hierarchy_id);
+
+		redirect('menu#hierarchy_id_' . $hierarchy_id);
 	}
 
 	function order_decrease($hierarchy_id)
 	{
 		$this->menu->order_decrease($hierarchy_id);
-	}
 
-	function trans()
-	{
-		$this->db->trans_begin();
-
-		$this->db->insert("hierarchy", array('deep' => 1));
-
-		$this->db
-			->where('hierarchy_id', $this->db->insert_id())
-			->update('hierarchy', array('lineage' => $this->db->insert_id()));
-
-		$this->db->query("SELECT * FROM asdf");
-		
-		$this->db->trans_complete();
-
-		if ($this->db->trans_status() === FALSE)
-	    {
-			echo 'nooooo';
-			$this->db->trans_rollback();
-			exit('this did not work');
-			return FALSE;
-	    }
-
-		echo 'it workesd';
-
-	    $this->db->trans_commit();
+		redirect('menu#hierarchy_id_' . $hierarchy_id);
 	}
 
 }
