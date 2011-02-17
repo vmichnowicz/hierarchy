@@ -1,1 +1,0 @@
-<div class="item deep_{deep}" id="hierarchy_id_{hierarchy_id}"><a href="{url}"><strong>{title}</strong> <em>(id: {hierarchy_id}, num children: {num_children}, order: {hierarchy_order})</em></a></div>
