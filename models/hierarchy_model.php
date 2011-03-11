@@ -788,7 +788,7 @@ class Hierarchy_model extends CI_Model {
 	 * @param string		Table name
 	 * @return int
 	 */
-	function highest_order($parent_id, $table)
+	public function highest_order($parent_id, $table)
 	{
 		$query = $this->db
 				->join($table, $table . '.hierarchy_id = hierarchy.hierarchy_id')

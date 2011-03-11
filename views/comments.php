@@ -173,12 +173,16 @@
 			<label for="comment">Comment<em class="req">*</em>:</label><textarea name="comment" id="comment" rows="10" cols="50"></textarea>
 		</div>
 		<div>
+			<input type="hidden" name="captcha_index" value="<?php echo $captcha['index']; ?>" />
+			<label for="captcha"><?php echo $captcha['question']; ?><em class="req">*</em>:</label><input type="text" name="captcha" id="captcha" />
+		</div>
+		<div>
 			<input type="hidden" name="parent_id" id="parent_id" value="<?php echo $reply_to ? $reply_to['hierarchy_id'] : NULL; ?>" /><input type="submit" value="Submit Comment" />
 		</div>
 	</fieldset>
 </form>
 
-<div clas="clear"></div>
+<div class="clear"></div>
 
 <div id="footer">
 	<a href="https://github.com/vmichnowicz/hierarchy">Download Source Code on Github</a>

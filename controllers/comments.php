@@ -2,7 +2,7 @@
 
 class Comments extends CI_Controller {
 
-	public $comments;
+	public $comments, $captchas;
 
 	/*
 	 * Construct
@@ -17,6 +17,38 @@ class Comments extends CI_Controller {
 
 		$this->comments = new $this->hierarchy;
 		$this->comments->table('comments');
+
+		// These may be too hard for the average person...
+		$this->captchas = array(
+			array(
+				'question' => '1 &times; 7',
+				'answer' => 7
+			),
+			array(
+				'question' => '1 + 14',
+				'answer' => 15
+			),
+			array(
+				'question' => '1 plus 9',
+				'answer' => 10
+			),
+			array(
+				'question' => '10 - 1',
+				'answer' => 9
+			),
+			array(
+				'question' => '100 minus 50',
+				'answer' => 50
+			),
+			array(
+				'question' => '5 &times; 1',
+				'answer' => 5
+			),
+			array(
+				'question' => 'First digit of <span style="font-family: serif;" title="Pi">&pi;</span>', // No one under the age of 12 can post a comment, nice!
+				'answer' => 3
+			)
+		);
 	}
 
 	/*
@@ -28,6 +60,13 @@ class Comments extends CI_Controller {
 			->generate_hierarchial_list('hierarchy_comments_template', 'ul', 'id="comments"');
 
 		$data['reply_to'] = $this->comments->item_exists($this->input->get('reply_to'));
+
+		$rand_question = array_rand($this->captchas, 1);
+
+		$data['captcha'] = array(
+			'index' => $rand_question,
+			'question' => $this->captchas[$rand_question]['question']
+		);
 
 		$this->load->view('comments', $data);
 	}
@@ -87,7 +126,12 @@ class Comments extends CI_Controller {
 				'field' => 'url',
 				'label' => 'URL',
 				'rules' => 'trim|prep_url|callback_valid_url'
-			)
+			),
+			array(
+				'field' => 'captcha',
+				'label' => 'Captcha',
+				'rules' => 'trim|callback_valid_captcha'
+			),
 		);
 
 		$this->form_validation->set_rules($config);
@@ -188,6 +232,37 @@ class Comments extends CI_Controller {
 		else
 		{
 			return TRUE;
+		}
+	}
+
+	/*
+	 * Validate our super simple captcha
+	 *
+	 * @param string	User's answer to our captcha
+	 * @return bool
+	 */
+	function valid_captcha($captcha_answer)
+	{
+		// Make sure this question exists
+		if (array_key_exists($this->input->post('captcha_index'), $this->captchas))
+		{
+			// If the user entered the correct response
+			if ($this->captchas[ $this->input->post('captcha_index') ]['answer'] === (int)$captcha_answer)
+			{
+				return TRUE;
+			}
+			// Really? They can not does a simplz maths questionz?
+			else
+			{
+				$this->form_validation->set_message('valid_captcha', 'Think about it, ' . $this->captchas[ $this->input->post('captcha_index') ]['question'] . '&hellip; You got this one champ.');
+				return FALSE;
+			}
+		}
+		// If question does not exist
+		else
+		{
+			$this->form_validation->set_message('valid_captcha', 'Homie aint gonna play that game.');
+			return FALSE;
 		}
 	}
 
