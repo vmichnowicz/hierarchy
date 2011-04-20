@@ -13,8 +13,8 @@
 				<option value=""></option>
 				<?php foreach ($elements as $key=>$value): ?>
 					<?php if ($key == $parent_id): ?>
-						<option selected="selected" value="<?php echo $key; ?>"><?php echo htmlspecialchars($value['title'], ENT_QUOTES, 'UTF-8');?></option>
-					<?php else: ?>
+						<option selected="selected" value="<?php echo $key; ?>"><?php echo htmlspecialchars($value['title'], ENT_QUOTES, 'UTF-8');?></option>					
+					<?php elseif ($key != $hierarchy_id): ?>
 						<option value="<?php echo $key; ?>"><?php echo htmlspecialchars($value['title'], ENT_QUOTES, 'UTF-8');?></option>
 					<?php endif; ?>
 				<?php endforeach; ?>
