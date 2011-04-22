@@ -499,6 +499,12 @@ class Hierarchy_model extends CI_Model {
 
 		$parent = $parent_id ? $this->item_exists($parent_id) : NULL;
 
+		// Can not be its own parent
+		if ($hierarchy_id === $parent_id)
+		{
+			return FALSE;
+		}
+
 		$this->db->trans_start();
 
 		// Get all items that share this lineage (that includes the item with the ID passed thru)

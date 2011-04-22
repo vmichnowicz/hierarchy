@@ -1,5 +1,17 @@
+## Instructions
+
+* Download CodeIgniter (Reactor)
+* Autoload "database" and "parser" libraries
+* Autoload "url" helper
+* Run `sql.sql`
+* Make sure your database and config files are set up correctly
+
+## Inspiration
+
 Based on concept provided by Ferdy Christant:
 http://ferdychristant.com/blog/articles/DOMM-7QJPM7
+
+## Copyright
 
 Copyright 2010 Victor Michnowicz
 
