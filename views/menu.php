@@ -177,9 +177,9 @@
 				<option value="">None</option>
 				<?php foreach ($elements as $el): ?>
 					<?php if ($parent['hierarchy_id'] == $el['hierarchy_id']): ?>
-						<option selected="selected" value="<?php echo $el['hierarchy_id']; ?>"><?php echo $el['title']; ?></option>
+						<option selected="selected" value="<?php echo $el['hierarchy_id']; ?>"><?php echo htmlspecialchars($el['title'], ENT_QUOTES, 'UTF-8') ?></option>
 					<?php else: ?>
-						<option value="<?php echo $el['hierarchy_id']; ?>"><?php echo $el['title']; ?></option>
+						<option value="<?php echo $el['hierarchy_id']; ?>"><?php echo htmlspecialchars($el['title'], ENT_QUOTES, 'UTF-8') ?></option>
 					<?php endif; ?>
 				<?php endforeach; ?>
 			</select>
