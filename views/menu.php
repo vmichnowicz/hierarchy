@@ -13,7 +13,134 @@
 	</script>
 	<script type="text/javascript" src="<?php echo base_url(); ?>js/jquery-1.5.min.js"></script>
 	<script type="text/javascript">
-		
+		$(document).ready(function() {
+
+			// Add JS class to body
+			$('body').addClass('js');
+
+			// Edit an item
+			$('a.edit').live('click', function() {
+				$(this).siblings('form').slideToggle('slow');
+			});
+
+			// Delete an item
+			$('a.delete').live('click', function(e) {
+
+				e.preventDefault();
+				$('body').addClass('waiting');
+
+				var answer = confirm('Are you sure you want to delete this menu item (and all child elements)?');
+
+				if (answer) {
+					var url = $(this).attr('href');
+					$.get(url, function() {
+						$('#menu').load(location.href + ' #menu > *', function() {
+							$('body').removeClass('waiting');
+						});
+					});
+				}
+			});
+
+			// Add a child element
+			$('a.child').live('click', function() {
+				var id = $(this).closest('div').attr('id').replace('hierarchy_id_', '');
+
+				$('form.add select option[value="' + id + '"]').attr('selected', true);
+				window.location.hash = 'add_menu_item';
+			});
+
+			// Update menu item's parent
+			$('#menu form').live('submit', function(e) {
+
+				e.preventDefault();
+				$('body').addClass('waiting');
+
+				var action = $(this).attr('action');
+				var id = $(this).closest('div').attr('id');
+
+				// post it..
+				$.post(action, $(this).serialize(), function() {
+
+					$('#menu').load(location.href + ' #menu > *', function() {
+						$('body').removeClass('waiting');
+					});
+
+				});
+
+			});
+
+			// Add item
+			$('#add_menu_item').live('submit', function(e) {
+
+				e.preventDefault();
+				$('body').addClass('waiting');
+
+				// Clear error messages
+				$('div.error').remove();
+				$('.error').removeClass('error');
+
+				var form = $(this);
+				var action = $(this).attr('action');
+
+				// Disable submit button
+				$(form).find('input[type="submit"]').attr('disabled', true);
+
+				$.post(action, $(form).serialize(), function(data) {
+
+					// There were some errors...
+					if (data.result == 'failure')
+					{
+						$('body').removeClass('waiting');
+
+						$.each(data.errors, function (item, error) {
+
+							el = $('<div />');
+							el.addClass('error');
+							el.html(error);
+
+							// Add error message
+							$('#' + item).addClass('error').after(el);
+						});
+					}
+					// There were no errors, GREAT SUCCESS!
+					else
+					{
+						// Update hidden value
+						$('#parent_id').val('');
+
+						// Reset form
+						$(form)[0].reset();
+
+						$('#menu').load(location.href + ' #menu > *', function() {
+							$('body').removeClass('waiting');
+						});
+					}
+
+					// Enable submit button
+					$(form).find('input[type="submit"]').attr('disabled', false);
+
+				}, 'json');
+
+			});
+
+			// Adjust item order
+			$('a.order_increase, a.order_decrease').live('click', function(e) {
+
+				e.preventDefault();
+				$('body').addClass('waiting');
+
+				var url = $(this).attr('href');
+
+				// post it..
+				$.post(url, function() {
+					$('#menu').load(location.href + ' #menu > *', function() {
+						$('body').removeClass('waiting');
+					});
+				});
+
+			});
+
+		});
 	</script>
 </head>
 <body>
