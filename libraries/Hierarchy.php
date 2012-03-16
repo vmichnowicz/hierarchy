@@ -2,36 +2,30 @@
 
 /**
 * Name:  Hierarchy
-*
 * Author: Victor Michnowicz, www.vmichnowicz.com, @vmichnowicz
-*
 * Location: http://github.com/vmichnowicz/hierarchy
-*
 * Description: Get your hierarchy on
-*
 * Requirements: CodeIgniter 2, PHP 5, and MySQL with InnoDB support
-*
 */
-
 class Hierarchy
 {
 	protected $CI;
-	
+
 	public $table;
 	public $extras;
 	public $is_ordered = FALSE;
-	
+
 	public $order_by = 'lineage';
 	public $order_by_order = 'ASC';
-	
+
 	public $extra_data = array();
-	
+
 	public $items_array;
 	public $hierarchial_items_array;
-	
+
 	public $template;
 	public $attributes = '';
-	
+
 	public function __construct()
 	{
 		$this->CI =& get_instance();
@@ -279,12 +273,12 @@ class Hierarchy
 	 * @param int			Hierarchy ID of new parent
 	 * @return null
 	 */
-	public function new_parent($hierarchy_id, $parent_id)
+	public function update_item_parent($hierarchy_id, $parent_id)
 	{
 		// If our parent ID is an empty string
 		$parent_id = $parent_id ? $parent_id : NULL;
 
-		$this->CI->hierarchy_model->new_parent($hierarchy_id, $parent_id, $this->table, $this->is_ordered);
+		$this->CI->hierarchy_model->update_item_parent($hierarchy_id, $parent_id, $this->table, $this->is_ordered);
 	}
 
 	/**

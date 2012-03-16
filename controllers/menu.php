@@ -40,7 +40,7 @@ class Menu extends CI_Controller {
 		// Get parent ID
 		$parent_id = $this->input->post('parent_id');
 
-		$this->menu->new_parent($hierarchy_id, $parent_id);
+		$this->menu->update_item_parent($hierarchy_id, $parent_id);
 
 		redirect('menu#hierarchy_id_' . $hierarchy_id);
 	}
@@ -153,7 +153,7 @@ class Menu extends CI_Controller {
 			// If this is not an AJAX request
 			else
 			{
-				redirect('menu#hierarchy_id_' . $this->db->insert_id);
+				redirect('menu#hierarchy_id_' . $this->db->insert_id());
 			}
 		}
 		else

@@ -490,7 +490,7 @@ class Hierarchy_model extends CI_Model {
 	 * @param bool			Is this hierarchy group ordered?
 	 * @return bool
 	 */
-	public function new_parent($hierarchy_id, $parent_id, $table, $is_ordered)
+	public function update_item_parent($hierarchy_id, $parent_id, $table, $is_ordered)
 	{
 		if ( ! $item = $this->item_exists($hierarchy_id) )
 		{
@@ -505,9 +505,58 @@ class Hierarchy_model extends CI_Model {
 			return FALSE;
 		}
 
+		// Next, we have to see if the new parent is in this items lineage
+		$lineage = $this->item_lineage($parent_id, $table);
+
+		// If our new parent is already in this current items lineage
+		if ( array_key_exists($hierarchy_id, $lineage) )
+		{
+			$this->update_item_parent_related($hierarchy_id, $item, $parent_id, $parent, $table, $is_ordered);
+		}
+		// If our new parent is not in this items lineage
+		else
+		{
+			$this->update_item_parent_unrelated($hierarchy_id, $item, $parent_id, $parent, $table, $is_ordered);
+		}
+	}
+
+	/**
+	 * Update an items parent when the new parent is witin the items current
+	 * lineage
+	 *
+	 * @access protected
+	 * @param int			Item ID
+	 * @param array			Item
+	 * @param int 			New parent ID
+	 * @param array 		New parent
+	 * @param string		Table to join with
+	 * @param bool			Is this hierarchy group ordered?
+	 * @return bool
+	 * @todo				Put on thinking cap & make this work...
+	 */
+	protected function update_item_parent_related($hierarchy_id, $item, $parent_id, $parent, $table, $is_ordered)
+	{
+		return TRUE;
+	}
+
+	/**
+	 * Update an items parent when the new parent is not witin the items current
+	 * lineage
+	 *
+	 * @access protected
+	 * @param int			Item ID
+	 * @param array			Item
+	 * @param int 			New parent ID
+	 * @param array 		New parent
+	 * @param string		Table to join with
+	 * @param bool			Is this hierarchy group ordered?
+	 * @return bool
+	 */
+	protected function update_item_parent_unrelated($hierarchy_id, $item, $parent_id, $parent, $table, $is_ordered)
+	{
 		$this->db->trans_start();
 
-		// Get all items that share this lineage (that includes the item with the ID passed thru)
+		// Get all items that share this lineage (that includes the item with the ID passed through)
 		$query = $this->db
 			->where('lineage LIKE', implode('-', $item['lineage']) . '-%')
 			->or_where('lineage LIKE', '%-' . $item['hierarchy_id'])
@@ -558,7 +607,7 @@ class Hierarchy_model extends CI_Model {
 			 * That made sense, right?
 			 */
 
-			$new_lineage = array_merge($parent_lineage, array_slice($lineage_array, $item['deep']));	
+			$new_lineage = array_merge($parent_lineage, array_slice($lineage_array, $item['deep']));
 
 			$data = array(
 				'lineage' => implode('-', $new_lineage),
@@ -592,7 +641,7 @@ class Hierarchy_model extends CI_Model {
 		$this->db
 			->where('hierarchy_id', $hierarchy_id)
 			->update('hierarchy', $data);
-		
+
 		$this->db->trans_complete();
 
 		return $this->db->trans_status();
@@ -620,12 +669,9 @@ class Hierarchy_model extends CI_Model {
 					h.hierarchy_id IN ($lineage_csv)
 			");
 
-			// Keep a counter so we can add in extra data later
-			$counter = 0;
-
 			foreach ($query->result() as $row)
 			{
-				$data[$counter] = array(
+				$data[ $row->hierarchy_id ] = array(
 					'hierarchy_id' 	=> $row->hierarchy_id,
 					'deep' 			=> $row->deep,
 					'lineage' 		=> $row->lineage ? explode('-', $row->lineage) : NULL,
@@ -635,11 +681,8 @@ class Hierarchy_model extends CI_Model {
 				// Add in extra data
 				foreach ($this->config->item('hierarchy_' . $table) as $extra_row)
 				{
-					$data[$counter][$extra_row] = $row->$extra_row;
+					$data[ $row->hierarchy_id ][$extra_row] = $row->$extra_row;
 				}
-
-				// Advance counter
-				$counter++;
 			}
 
 			return $data;
