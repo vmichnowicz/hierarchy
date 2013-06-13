@@ -67,7 +67,9 @@ class Hierarchy
 		$this->extras = $this->CI->config->item('hierarchy_' . $table);
 		
 		// Is this table ordered? (look for "hierarchy_order")
-		$this->is_ordered = in_array('hierarchy_order', $this->extras);	
+		$this->is_ordered = in_array('hierarchy_order', $this->extras);
+
+		$this->CI->hierarchy_model->table = $table;
 
 		return $this;
 	}

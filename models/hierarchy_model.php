@@ -2,6 +2,8 @@
 
 class Hierarchy_model extends CI_Model {
 
+	public $table;
+
 	/**
 	 * Get all items from a provided table and generate an array
 	 *
@@ -315,7 +317,7 @@ class Hierarchy_model extends CI_Model {
 			if ($query->num_rows() > 0)
 			{
 
-				$order = $this->highest_order($parent_id, $table);
+				$order = $this->highest_order($parent_id, $this->table);
 
 				foreach ($query->result() as $row)
 				{
@@ -325,7 +327,7 @@ class Hierarchy_model extends CI_Model {
 						$this->db->where('hierarchy_id', $row->hierarchy_id)->delete('hierarchy');
 					}
 					
-					// If we DO NOT want to delte the children (shift left)
+					// If we DO NOT want to delete the children (shift left)
 					else
 					{
 						$lineage_array = explode('-', $row->lineage);
