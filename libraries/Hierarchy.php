@@ -131,36 +131,36 @@ class Hierarchy
 		$this->order_by_order = ( strtolower($order_by_order) == 'asc' || strtolower($order_by_order) == 'desc' || strtolower($order_by_order) == 'random' ) ? strtoupper($order_by_order) : 'ASC';
 		return $this;
 	}
-	
+
 	/**
 	 * Get array of all items
 	 * 
 	 * @access public
 	 * @return object
 	 */
-	public function get_items_array()
+	public function get_items_array($parent_id = NULL)
 	{
-		$this->items_array = $this->CI->hierarchy_model->get_items_array($this->table, $this->order_by, $this->order_by_order);
+		$this->items_array = $this->CI->hierarchy_model->get_items_array($this->table, $this->order_by, $this->order_by_order, $parent_id);
 		return $this;
 	}
-	
+
 	/**
 	 * Get multi-dimensional array of all items
 	 * 
 	 * @access public
 	 * @return object
 	 */
-	public function get_hierarchical_items_array()
+	public function get_hierarchical_items_array($parent_id = NULL)
 	{
 		if ( ! $this->items_array )
 		{
-			$this->get_items_array($this->table, $this->order_by, $this->order_by_order);
+			$this->get_items_array($this->table, $this->order_by, $this->order_by_order, $parent_id);
 		}
-		
+
 		$this->hierarchial_items_array = $this->CI->hierarchy_model->get_hierarchical_items_array($this->items_array);
 		return $this;
 	}
-	
+
 	/**
 	 * Generate HTML list
 	 * 

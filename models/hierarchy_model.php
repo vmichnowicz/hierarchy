@@ -13,12 +13,13 @@ class Hierarchy_model extends CI_Model {
 	 * @param string		Order ASC or DESC
 	 * @return array
 	 */
-	public function get_items_array($table, $order_by, $order_by_order)
+	public function get_items_array($table, $order_by, $order_by_order, $parent_id = NULL)
 	{
 		if ($table)
 		{
-			// Run query
-			$query = $this->db->query("
+			$parent_id = ( is_int($parent_id) || ctype_digit($parent_id) ) ? (int)$parent_id : NULL;
+
+			$query = "
 				SELECT *,
 					(
 						SELECT COUNT(*)
@@ -28,17 +29,24 @@ class Hierarchy_model extends CI_Model {
 				FROM
 					hierarchy as h,
 					$table as j
-				WHERE h.hierarchy_id = j.hierarchy_id
-				ORDER BY deep ASC, $order_by $order_by_order
-			");
+				WHERE h.hierarchy_id = j.hierarchy_id";
+
+			if ($parent_id)
+			{
+				$query .= " AND ( h.lineage LIKE '{$parent_id}-' OR h.lineage = $parent_id ) ";
+			}
+
+			$query .= " ORDER BY deep ASC, $order_by $order_by_order";
+
+			$result = $this->db->query($query);
 
 			// If we got some results
-			if ($query->num_rows() > 0)
+			if ($result->num_rows() > 0)
 			{
 				// Keep a counter so we can add in extra data later
 				$counter = 1;
 
-				foreach ($query->result() as $row)
+				foreach ($result->result() as $row)
 				{
 					$items_array[$row->hierarchy_id] = array(
 						'hierarchy_id' 	=> $row->hierarchy_id,
